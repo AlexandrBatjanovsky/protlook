@@ -2,50 +2,16 @@
 module PDBCIF_File  defines loading and reading
 CIF and PDB format modeles.
 """
-# module PDBCIF_File
+module ProtLook
 
 using FilePaths ; using FilePathsBase: / ; using Glob
 using CodecZlib, TranscodingStreams
 using DataFrames, CSV
 using ProgressMeter, Distributed
 
-@everywhere function downloadCif(PDBId::AbstractString, fname=missing, zip=true)
+include("data.jl")
 
-    (fname === missing) && (fname = PDBId)
-    fname = PDBId*"."*"cif"
-    if zip
-        fname *=".gz"
-    end
-    if !ispath(pwd()*"/structs/"*fname)
-        download("https://files.rcsb.org/download/"*fname, pwd()*"/structs/"*fname)
-    end
-end
-
-framePDB = CSV.read("2", DataFrame; header=true)
-
-placedir = cwd()/"structs"
-
-if !exists(placedir)
-    mkdir(placedir, recursive=true)
-end
-cd(placedir)
-
-#println(typeof(unique(framePDB[!, :PDBId])[1]))
-#downloadCif(unique(framePDB[!, :PDBId])[1])
-
-pdb_download = unique(framePDB[!, :PDBId])
-@sync @distributed for pdbid in pdb_download
-    println(pdbid)
-    downloadCif(pdbid)
-end
-
-# for pdbid_loadcif in Set(framePDB[!, :PDBId])
-#     downloadCif(pdbid_loadcif)
-# end
-
-
-
-# end    # module PDBCIF_File
+end    #    module ProtLook
 """
 t_single = t_all = time()
 for prot_gfile in list_gf
