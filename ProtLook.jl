@@ -9,7 +9,7 @@ using CodecZlib, TranscodingStreams
 using DataFrames, CSV
 using ProgressMeter, Distributed
 
-include("data.jl")
+include("Data.jl")
 
 end    #    module ProtLook
 """

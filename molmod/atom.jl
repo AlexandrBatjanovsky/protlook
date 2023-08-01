@@ -1,27 +1,37 @@
 module AtomI
 
 export Atoma
+export sModel
 
 using StaticArrays
 
 struct Atoma
-    id::Int32
-    atom_name::String
-    alternativ_location::String
-    parrent::Ref{}
-    coords::SVector{3, Float32}
-    occupancy::Float32
-    bfactor::Float32
-    segment_id::Int16
-    element::String
-    charge::Float32
-    model::String
-    chain::String
-    compound::String
-    idcompound::Int16
-            
-    properties::Dict{String, String}
-    bonds::Vector{Ref}
+    hetatom::Bool
+    id::Union{Int32, Nothing}
+    atom_name::Union{String, Nothing}
+    alternativ::Union{String, Nothing}
+    coords::SVector{3, T} where T<:Union{Float32, Nothing}
+    occupancy::Union{Float32, Nothing}
+    bfactor::Union{Float32, Nothing}
+
+    element::Union{String, Nothing}
+    charge::Union{Float32, Nothing}
+    
+    model::Union{Int32, Nothing}
+    chain::Union{String, Nothing}
+    compound::Union{String, Nothing}
+    idcompound::Union{Int32, Nothing}
+
+    i_categori::Vector{Int8}
+    parents::Dict{String, Ref{}}
+    #properties::Dict{String, Union{Number, AbstractString}}
+    #bonds::Vector{Ref}
+end
+
+struct sModel
+    numModel::Int32
+    iatoms::Vector{Int32}
+    alternativ::Dict{String, Vector{Int32}}
 end
 
 get_ID(ob::Atoma) = ob.id
