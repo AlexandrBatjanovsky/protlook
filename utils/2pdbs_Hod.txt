@@ -1,4 +1,6 @@
 PDBId,FileName
+1a03,1a03.cif.gz
+1abz,1abz.cif.gz
 1jzk,1jzk.cif.gz
 3g1c,3g1c.cif.gz
 4a47,4a47.cif.gz
