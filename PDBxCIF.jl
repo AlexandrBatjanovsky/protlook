@@ -179,6 +179,9 @@ function readCIF(PDBId::AbstractString, afname=nothing, dir=nothing,
             push!(atomicloop[numloop].atoms, curAtoma)
         end
     end
+    modelloop = Dict{Int16, OrderedDict{Int32, StructModel}}()
+    chainloop = Dict{Int16, OrderedDict{Tuple{Int32, AbstractString}, PDBsChain}}()
+    compoloop = Dict{Int16, OrderedDict{Tuple{Int32, AbstractString, Int32}, AtomsGroup}}()
     for loopnum in keys(atomicloop)
         global modelsdict, chainsdict, composdict
         ckmodel = atomicloop[loopnum].atoms[1].model
@@ -214,7 +217,8 @@ function readCIF(PDBId::AbstractString, afname=nothing, dir=nothing,
             end
             if ckchain != (ckAtomi.model, ckAtomi.chain)
                 if haskey(chainsdict, (ckAtomi.model, ckAtomi.chain))
-                    @warn "Chain introduction $(ckchain) in $((ckAtomi.model, ckAtomi.chain))"
+                    if !(ckAtomi.hetatom)
+                        @warn "Chain introduction $(ckchain) in $((ckAtomi.model, ckAtomi.chain))" end
                 else chainsdict[(ckAtomi.model, ckAtomi.chain)]=PDBsChain((ckAtomi.model, ckAtomi.chain),
                                                                          Dict("atoms"=>Vector{Ref{Atoma}}(),
                                                                               "compounds"=>Vector{Ref{AtomsGroup}}()),
@@ -249,18 +253,24 @@ function readCIF(PDBId::AbstractString, afname=nothing, dir=nothing,
             ckAtomi.parents["chain"] = Ref(chainsdict[ckchain])
             ckAtomi.parents["compoud"] = Ref(composdict[ckidcompound])
         end
+        println(typeof(loopnum))
+        modelloop[loopnum] = modelsdict
+        chainloop[loopnum] = chainsdict
+        compoloop[loopnum] = composdict
     end
     println("Models: ", length(modelsdict))
-    for ckmodel in keys(modelsdict)
-        println("In model ", ckmodel, " Chains ", [cha[2] for cha in keys(chainsdict) if cha[1]==ckmodel])
-        for ckchain in keys(chainsdict)
-            if ckchain[1] == ckmodel
-                println("in chain ", ckchain, " compound ", [(comch[1], comch[2].compoundname) for comch in composdict if (comch[1][1], comch[1][2]) == ckchain])
+    for loopnum in keys(modelloop)
+        for ckmodel in keys(modelloop[loopnum])
+            println("In model ", ckmodel, " Chains ", [cha[2] for cha in keys(chainsdict) if cha[1]==ckmodel])
+            for ckchain in keys(chainsdict)
+                if ckchain[1] == ckmodel
+                     # println("in chain ", ckchain, " compound ", [(comch[1], comch[2].compoundname) for comch in composdict if (comch[1][1], comch[1][2]) == ckchain])
+                end
             end
         end
     end
     println("")
-    exit()
+    return()
 end
 
 end    #    module PDBxCIF
