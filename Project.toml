@@ -1,0 +1,13 @@
+name = "ProtLook"
+uuid = "484235ff-6f12-45f8-ba75-d93e023b2485"
+authors = ["AlexandrBatjanovsky <alexandersn@yandex.ru> and contributors"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.9"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
