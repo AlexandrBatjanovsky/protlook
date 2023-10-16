@@ -1,0 +1,16 @@
+{
+  "ProjectPathStructure": {
+    "extras": {},
+    "src": {},
+    "docs": {},
+    "wdata": {
+      "structs": {}
+    }
+  },
+  "ProjectAuthor": {
+    "Alexander Batjanovskii": [
+      "AlexandrBatjanovsky",
+      "alexandersn@yandex.ru"
+    ]
+  }
+}
