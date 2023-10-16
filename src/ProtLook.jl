@@ -17,9 +17,8 @@ if !ispath(joinpath(projectDir, logDir))
         mkpath(joinpath(projectDir, logDir)) end
 Pkg.activate(projectDir)
 
-using JSON
+using JSON3
 #settings get/init
-settings = Dict{Symbol, Union{String, Dict{Symbol, String}}}()
 if !isfile(joinpath(projectDir, "settings.json"))
 	println("Create zero settings")
 	settings = Dict(:DirOrg=> 
@@ -29,16 +28,19 @@ if !isfile(joinpath(projectDir, "settings.json"))
 							 :dsDir=>realpath(joinpath(projectDir, structDir)),
 					         :lgDir=>realpath(joinpath(projectDir, logDir))),
 					:DatLst=>
-					    "PDBSelector.csv")
+					    realpath(joinpath(projectDir, dataDir, "PDBSelector.csv")))
 						
 	open(joinpath(projectDir, "settings.json"), "w") do f
-		JSON.print(f, settings, 2)
+		JSON3.pretty(f, settings)
 	end
-else settings = JSON.Parser.parse(open(joinpath(projectDir, "settings.json"), "r")) end
-
+else
+	open(joinpath(projectDir, "settings.json"), "r") do f
+		global settings = copy(JSON3.read(f))
+	end
+end
+print(settings)
 #data init
 include("Data.jl")
-
 
 end    #    module ProtLook
 """

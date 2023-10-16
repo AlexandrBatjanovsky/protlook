@@ -4,9 +4,9 @@ using DataFrames, CSV
 using Glob
 using Logging
 
-include("PDBxCIF.jl")
-using .PDBxCIF
-using .AtomicProcessing
+#include("PDBxCIF.jl")
+#using .PDBxCIF
+#using .AtomicProcessing
 
 using ..ProtLook: settings
 loggf = "dlog.log"
@@ -17,7 +17,7 @@ framePDB = CSV.read(joinpath(settings[:DirOrg][:prDir], settings[:DatLst]), Data
 pdb_download = unique(framePDB[!, :PDBId])
 for pdbid in pdb_download
     println("^^^^", pdbid)
-    PDBxCIF.readCIF(pdbid)
+    #PDBxCIF.readCIF(pdbid)
 end
 
 #framePDB = CSV.read("utils/2", DataFrame; header=true)

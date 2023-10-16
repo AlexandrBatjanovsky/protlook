@@ -1,10 +1,10 @@
 {
-  "DirOrg": {
-    "dsDir": "D:\\work\\ProtLook\\wdata\\structs",
-    "prDir": "D:\\work\\ProtLook",
-    "scDir": "D:\\work\\ProtLook\\src",
-    "wdDir": "D:\\work\\ProtLook\\wdata",
-    "lgDir": "D:\\work\\ProtLook\\wdata\\logs"
-  },
-  "DatLst": "PDBSelector.csv"
+    "DirOrg": {
+        "dsDir": "D:\\work\\ProtLook\\wdata\\structs",
+        "prDir": "D:\\work\\ProtLook",
+        "scDir": "D:\\work\\ProtLook\\src",
+        "wdDir": "D:\\work\\ProtLook\\wdata",
+        "lgDir": "D:\\work\\ProtLook\\wdata\\logs"
+    },
+    "DatLst": "D:\\work\\ProtLook\\wdata\\PDBSelector.csv"
 }
