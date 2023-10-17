@@ -4,7 +4,7 @@ CIF and PDB format modeles.
 """
 module ProtLook
 
-
+export settings
 #activate project envivrominent and construction
 using Pkg
 projectDir, srcDir = splitdir(dirname(Base.source_path()))
@@ -16,6 +16,7 @@ if !ispath(joinpath(projectDir, structDir))
 if !ispath(joinpath(projectDir, logDir)) 
         mkpath(joinpath(projectDir, logDir)) end
 Pkg.activate(projectDir)
+Pkg.instantiate()
 
 using JSON3
 #settings get/init
@@ -37,8 +38,13 @@ else
 	open(joinpath(projectDir, "settings.json"), "r") do f
 		global settings = copy(JSON3.read(f))
 	end
+	settings[:DirOrg] = Dict(:prDir=>projectDir,
+							 :scDir=>joinpath(projectDir, srcDir),
+							 :wdDir=>joinpath(projectDir, dataDir),
+							 :dsDir=>realpath(joinpath(projectDir, structDir)),
+							 :lgDir=>realpath(joinpath(projectDir, logDir)))
+	settings[:DatLst] = realpath(joinpath(projectDir, dataDir, "PDBSelector.csv"))
 end
-print(settings)
 #data init
 include("Data.jl")
 

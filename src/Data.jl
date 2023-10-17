@@ -4,20 +4,21 @@ using DataFrames, CSV
 using Glob
 using Logging
 
-#include("PDBxCIF.jl")
-#using .PDBxCIF
+using ..ProtLook: settings # settings
+export settings
+
+include("PDBxCIF.jl")
+using .PDBxCIF
 #using .AtomicProcessing
 
-using ..ProtLook: settings
-loggf = "dlog.log"
-logga = SimpleLogger(open(joinpath(settings[:DirOrg][:lgDir], loggf), "w"))
+loggf = joinpath(settings[:DirOrg][:lgDir],"dlog.log")
+logga = SimpleLogger(open(loggf, "w"))
 
 framePDB = CSV.read(joinpath(settings[:DirOrg][:prDir], settings[:DatLst]), DataFrame; header=true)
 
-pdb_download = unique(framePDB[!, :PDBId])
-for pdbid in pdb_download
-    println("^^^^", pdbid)
-    #PDBxCIF.readCIF(pdbid)
+for pdbr in eachrow(framePDB)
+    #println(pdbr[:PDBId])
+    PDBxCIF.readCIF(pdbr[:PDBId], joinpath(settings[:DirOrg][:dsDir], pdbr[:FileName]), pdbr[:cif], pdbr[:gz])
 end
 
 #framePDB = CSV.read("utils/2", DataFrame; header=true)

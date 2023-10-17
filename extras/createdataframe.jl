@@ -28,5 +28,10 @@ if args["file"]
     CSV.write(args["--outfile"]*".csv",
                 hcat(select(framePDB, :Column1 => (x -> SubString.(x, Ref(parse(Int64, args["--fpID"])), 
                                                                       Ref(parse(Int64, args["--spID"])))) => :PDBId),
-                     rename(framePDB, 1=>:FileName)))
+                     select(framePDB, :Column1 => (x -> .*(SubString.(x, Ref(parse(Int64, args["--fpID"])), 
+                                                                         Ref(parse(Int64, args["--spID"]))), 
+                                                           ".cif.gz")) => :FileName),
+                     select(framePDB, :Column1 => (x -> .==(getindex.(splitext.(x),2), ".gz")) => :gz),
+                     select(framePDB, :Column1 => (x -> occursin.("a", x)) => :cif),
+                     rename(framePDB, 1=>:Comment)))
 end
