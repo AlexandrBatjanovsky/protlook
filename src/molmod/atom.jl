@@ -7,7 +7,8 @@ export PDBsChain
 
 using StaticArrays
 
-struct Atoma
+
+#= struct Atoma
     id::Union{Int32, Nothing}
     hetatom::Bool
     atom_name::Union{String, Nothing}
@@ -28,6 +29,63 @@ struct Atoma
     parents::Dict{String, Ref{}}
     #properties::Dict{String, Union{Number, AbstractString}}
     #bonds::Vector{Ref}
+end
+ =#
+
+struct Atoma
+    group_PDB::Symbol               #1  HETATOM, ATOM
+    id::Int32                       #2  Atom index
+    type_symbol::Symbol             #3  Element
+    label_atom_id::Symbol           #4  Type Atom in compound(auth_atom_id)
+    label_alt_id::Symbol            #5  Alternative in Structure
+    label_comp_id::Symbol           #6  Compound(atomic group) (auth_comp_id)
+    label_asym_id::Symbol           #7  Chain Id (auth_asym_id)
+    label_entity_id::Symbol         #8  ?
+    label_seq_id::Int32             #9  Compound(atomic group) index (auth_seq_id)
+    pdbx_PDB_ins_code::Symbol       #10 ?
+    Cartn_x                         #11 Coords
+    Cartn_y                         #12
+    Cartn_z                         #13
+    occupancy::Float32              #14 Part position detection
+    B_iso_or_equiv::Float32         #15 B-factor
+    pdbx_formal_charge::Float32     #16 Formal pdb charge
+    auth_seq_id::Int32              #17 Compound(atomic group) index (label_seq_id)
+    auth_comp_id::Symbol            #18 Compound(atomic group)(label_comp_id)
+    auth_asym_id::Symbol            #19 Chain Id (label_asym_id)
+    auth_atom_id::Symbol            #20 Type Atom in compound(label_atom_id)
+    pdbx_PDB_model_num::Int32       #21 Model Index
+    function Atoma(ar::Vector{AbstractString})
+        if length(ar)!=21 error("atomic notation of incorrect length") end
+        latom_id = (ar[4]  != "?" ? Symbol(ar[4]) : Symbol(ar[20]))
+        aatom_id = (ar[20] != "?" ? Symbol(ar[20]) : Symbol(ar[4]))
+        lcomp_id = (ar[6]  != "?" ? Symbol(ar[6]) : Symbol(ar[18]))
+        acomp_id = (ar[18] != "?" ? Symbol(ar[18]) : Symbol(ar[6]))
+        lasym_id = (ar[7]  != "?" ? Symbol(ar[7]) : Symbol(ar[19]))
+        aasym_id = (ar[19] != "?" ? Symbol(ar[19]) : Symbol(ar[7]))
+        lseq_id  = (ar[9]  != "?" ? parse(Int32, ar[9]) : parse(Int32, ar[17]))
+        aseq_id  = (ar[17] != "?" ? parse(Int32, ar[17]) : parse(Int32, ar[9]))
+        new(Symbol(ar[1]), 
+            parse(Int32, ar[2]), 
+            Symbol(ar[3]), 
+            latom_id, 
+            Symbol(ar[5]),
+            lcomp_id,
+            lasym_id,
+            Symbol(ar[8]),
+            lseq_id,
+            Symbol(ar[10]),
+            parse(Float32, ar[11]),
+            parse(Float32, ar[12]),
+            parse(Float32, ar[13]),
+            parse(Float32, ar[14]),
+            parse(Float32, ar[15]),
+            parse(Float32, ar[16]),
+            aseq_id,
+            acomp_id,
+            aasym_id,
+            aatom_id,
+            parce(Int32, ar[21]))
+    end
 end
 
 struct AtomsGroup

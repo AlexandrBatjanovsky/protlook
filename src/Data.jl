@@ -16,10 +16,18 @@ logga = SimpleLogger(open(loggf, "w"))
 
 framePDB = CSV.read(joinpath(settings[:DirOrg][:prDir], settings[:DatLst]), DataFrame; header=true)
 
+allatributes = Set{Vector{Symbol}}()
 for pdbr in eachrow(framePDB)
-    #println(pdbr[:PDBId])
-    PDBxCIF.readCIF(pdbr[:PDBId], joinpath(settings[:DirOrg][:dsDir], pdbr[:FileName]), pdbr[:cif], pdbr[:gz])
+    print(pdbr[:PDBId], " ")
+    ur = PDBxCIF.readCIF(pdbr[:PDBId], joinpath(settings[:DirOrg][:dsDir], pdbr[:FileName]), pdbr[:cif], pdbr[:gz])
+    for loopa in keys(ur)
+        print(loopa, size(ur[loopa]))
+        push!(allatributes, propertynames(ur[loopa]))
+    end
+    println()
 end
+
+print(allatributes)
 
 #framePDB = CSV.read("utils/2", DataFrame; header=true)
 #for cifa in framePDB[!, :FileName]
