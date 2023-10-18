@@ -8,7 +8,7 @@ import TranscodingStreams: TranscodingStream as tcstream
 import CodecZlib: GzipDecompressor as uzip
 import OrderedCollections:OrderedDict;
 using DataFrames
-#import OrderedCollections:ht_keyindex;
+
     
 # include("molmod/atom.jl")
 # using .AtomI
@@ -68,7 +68,7 @@ function readCIF(PDBId::AbstractString, afname::AbstractString, cifflag::Bool, z
 
     try
         if zip
-             global cifstream = tcstream(uzip(), open(afname, "r"))
+            global cifstream = tcstream(uzip(), open(afname, "r"))
         else global cifstream = open(afname, "r") end
     catch eread
         @warn "Cant read $(PDBId) because $(eread)"
@@ -82,8 +82,6 @@ function readCIF(PDBId::AbstractString, afname::AbstractString, cifflag::Bool, z
     # -текущего цикла
     ##atomicdata = Vector{Atoma}
     # сэт номеров циклов содержащих атомные записи (теоретически должен содержать одно значение)
-    ### atomicloop = Dict{Int16, @NamedTuple{categ::OrderedDict{Symbol, OrderedDict{Symbol, Vector{String}}}, 
-    # ##                                    atoms::Vector{Atoma}}}()
     atomicloop = Dict{Int16, DataFrame}()
     numloop = 1
     for cifline in eachline(cifstream)
@@ -103,8 +101,8 @@ function readCIF(PDBId::AbstractString, afname::AbstractString, cifflag::Bool, z
                     Vector{String}(cifsplitline[2:end])
                 @debug "Split loop after 2" cifsplitline[2:end]
             else
-                @warn "In $(fname) categori $(split(cifsplitline[1], ".")[1]) 
-                       attribute $(split(cifsplitline[1], ".")[2]) repeat"
+                @warn "In $(fname) categori $(split(cifsplitline[1], ".")[1]) attribute\
+                       $(split(cifsplitline[1], ".")[2]) repeat"
                 append!(cur_loop_categories[Symbol(split(cifsplitline[1], ".")[1])][
                                             Symbol(split(cifsplitline[1], ".")[2])],
                         Vector{String}(cifsplitline[2:end]))
@@ -116,7 +114,7 @@ function readCIF(PDBId::AbstractString, afname::AbstractString, cifflag::Bool, z
                 if !haskey(atomicloop, numloop)
                     if length(atomicloop) > 0 @warn "In $(fname) atom records in different loops" end
                     atomicloop[numloop] = DataFrame([[] for i in 1:length(cur_loop_categories[:_atom_site])],
-                                                     collect(keys(cur_loop_categories[:_atom_site])); copycols=false)
+                                                     collect(keys(cur_loop_categories[:_atom_site])); copycols=false) 
                 end
                 push!(atomicloop[numloop], cifsplitline)
             end

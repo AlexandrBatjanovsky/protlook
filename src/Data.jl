@@ -20,11 +20,7 @@ allatributes = Set{Vector{Symbol}}()
 for pdbr in eachrow(framePDB)
     print(pdbr[:PDBId], " ")
     ur = PDBxCIF.readCIF(pdbr[:PDBId], joinpath(settings[:DirOrg][:dsDir], pdbr[:FileName]), pdbr[:cif], pdbr[:gz])
-    for loopa in keys(ur)
-        print(loopa, size(ur[loopa]))
-        push!(allatributes, propertynames(ur[loopa]))
-    end
-    println()
+    println(size(ur))
 end
 
 print(allatributes)
