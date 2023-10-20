@@ -20,7 +20,13 @@ allatributes = Set{Vector{Symbol}}()
 for pdbr in eachrow(framePDB)
     print(pdbr[:PDBId], " ")
     ur = PDBxCIF.readCIF(pdbr[:PDBId], joinpath(settings[:DirOrg][:dsDir], pdbr[:FileName]), pdbr[:cif], pdbr[:gz])
-    if !ismissing(ur) println(size(ur)) end
+    if !ismissing(ur) 
+        model, chain, compo = PDBxCIF.constructMolecula(ur)
+        println(size(ur))
+        #for ato in ur
+        #    if ato.parents[StructModel][].childs[Atoma]
+        # end
+    end
 end
 
 print(allatributes)

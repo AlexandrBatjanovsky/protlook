@@ -4,6 +4,9 @@ using ..Datas: settings
 
 using Downloads
 using Logging
+Logging.disable_logging(LogLevel(-2000))
+debug_logger = ConsoleLogger(stderr, Logging.Debug)
+global_logger(debug_logger)
 import TranscodingStreams: TranscodingStream as tcstream
 import CodecZlib: GzipDecompressor as uzip
 import OrderedCollections:OrderedDict;
@@ -128,8 +131,8 @@ function readCIF(PDBId::AbstractString, fname::AbstractString, cifflag::Bool, zi
 
 end
 
-function constructMolecula(atomiccontent::Dict{Int16, Vector{Atoma}})
-    
+function constructMolecula(atomiccontent::Vector{Atoma})
+    global modelsdict, chainsdict, composdict
     ckmodel = atomiccontent[1].pdbx_PDB_model_num
     modelsdict = Dict{Int32, StructModel}(ckmodel=>
                                           StructModel(ckmodel,
@@ -137,7 +140,7 @@ function constructMolecula(atomiccontent::Dict{Int16, Vector{Atoma}})
                                                            AtomsGroup=>Vector{Ref{AtomsGroup}}(),
                                                            PDBsChain=>Vector{Ref{PDBsChain}}())))
     
-    ckchain = (ckmodel, atomiccontent[1].auth_asym_id)
+    ckchain = (ckmodel, atomiccontent[1].label_asym_id)
     chainsdict = Dict{Tuple{Int32, Symbol}, PDBsChain}(ckchain=>
                                                        PDBsChain(ckchain, 
                                                                  Dict(Atoma=>Vector{Ref{Atoma}}(),
@@ -145,7 +148,7 @@ function constructMolecula(atomiccontent::Dict{Int16, Vector{Atoma}})
                                                                  Dict(StructModel=>Ref{StructModel}(modelsdict[ckmodel]))))
     push!(modelsdict[ckmodel].childs[PDBsChain], Ref(chainsdict[ckchain]))
 
-    ckcompd = (ckmodel, atomiccontent[1].auth_asym_id, atomiccontent[1].auth_seq_id)
+    ckcompd = (ckmodel, atomiccontent[1].label_asym_id, atomiccontent[1].label_seq_id)
     composdict = OrderedDict{Tuple{Int32, Symbol, Int32}, AtomsGroup}(ckcompd=>
         AtomsGroup(ckcompd, atomiccontent[1].auth_comp_id,
                    Dict(Atoma=>Vector{Ref{Atoma}}()),
@@ -153,63 +156,78 @@ function constructMolecula(atomiccontent::Dict{Int16, Vector{Atoma}})
                         StructModel=>Ref{StructModel}(modelsdict[ckmodel]))))
     push!(modelsdict[ckmodel].childs[AtomsGroup], Ref(composdict[ckcompd]))
     push!(chainsdict[ckchain].childs[AtomsGroup], Ref(composdict[ckcompd]))
-    
-    for (ickAtomi, ckAtomi) in enumerate(atomicloop[loopnum].atoms)
+
+    for ckAtomi in atomiccontent
         global modelsdict, chainsdict, composdict
         if ckmodel != ckAtomi.pdbx_PDB_model_num
             if haskey(modelsdict, ckAtomi.pdbx_PDB_model_num)
                 @warn "Model introduction $(ckAtomi.pdbx_PDB_model_num) in $(ckmodel)"
-            else modelsdict[ckAtomi.pdbx_PDB_model_num] = StructModel(ckAtomi.pdbx_PDB_model_num,
+            else
+                global modelsdict
+                modelsdict[ckAtomi.pdbx_PDB_model_num] = StructModel(ckAtomi.pdbx_PDB_model_num,
                                                                      Dict(Atoma=>Vector{Ref{Atoma}}(),
                                                                           AtomsGroup=>Vector{Ref{AtomsGroup}}(),
-                                                                          PDBsChain=>Vector{Ref{PDBsChain}}())) end
+                                                                          PDBsChain=>Vector{Ref{PDBsChain}}())) 
+            end
         end
 
-        if ckchain != (ckAtomi.pdbx_PDB_model_num, ckAtomi.auth_asym_id)
-            if haskey(chainsdict, (ckAtomi.pdbx_PDB_model_num, ckAtomi.auth_asym_id))
-                if ckAtomi.group_PDB == :HETATM
-                    @warn "Chain introduction $((ckAtomi.pdbx_PDB_model_num, ckAtomi.auth_asym_id)) in $(ckchain)" end
+        if ckchain != (ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id)
+            if haskey(chainsdict, (ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id))
+                if ckAtomi.group_PDB != :HETATM
+                    @warn "Chain introduction $((ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id)) in $(ckchain)" end
             else 
-                chainsdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.auth_asym_id)]=PDBsChain(
-                    (ckAtomi.pdbx_PDB_model_num, ckAtomi.auth_asym_id),
+                global chainsdict
+                chainsdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id)]=PDBsChain(
+                    (ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id),
                     Dict(Atoma=>Vector{Ref{Atoma}}(),
                          AtomsGroup=>Vector{Ref{AtomsGroup}}()),
                     Dict(StructModel=>Ref{StructModel}(modelsdict[ckAtomi.pdbx_PDB_model_num])))
                 push!(modelsdict[ckAtomi.pdbx_PDB_model_num].childs[PDBsChain], 
-                      Ref(chainsdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.auth_asym_id)]))
+                      Ref(chainsdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id)]))
             end
         end
 
-        if ckcompd != (ckAtomi.pdbx_PDB_model_num, ckAtomi.auth_asym_id, ckAtomi.auth_seq_id)
-            if haskey(composdict, (ckAtomi.pdbx_PDB_model_num, ckAtomi.auth_asym_id, ckAtomi.auth_seq_id))
-                @warn "Compound introduction $((ckAtomi.pdbx_PDB_model_num, ckAtomi.auth_asym_id, ckAtomi.auth_seq_id))\
+        if ckcompd != (ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id, ckAtomi.label_seq_id)
+            if haskey(composdict, (ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id, ckAtomi.label_seq_id))
+                print(ckAtomi)
+                @warn "Compound introduction $((ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id, ckAtomi.label_seq_id))\
                              in $(ckcompd) "
-            else composdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.auth_asym_id, ckAtomi.auth_seq_id)] =
-                AtomsGroup((ckAtomi.pdbx_PDB_model_num, ckAtomi.auth_asym_id, ckAtomi.auth_seq_id),
+            else
+                global composdict 
+                composdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id, ckAtomi.label_seq_id)] =
+                AtomsGroup((ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id, ckAtomi.label_seq_id),
                            ckAtomi.auth_comp_id,
                            Dict(Atoma=>Vector{Ref{Atoma}}()),
-                           Dict(PDBsChain=>Ref(chainsdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.auth_asym_id)]),
+                           Dict(PDBsChain=>Ref(chainsdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id)]),
                                 StructModel=>Ref(modelsdict[ckAtomi.pdbx_PDB_model_num])))
                 push!(modelsdict[ckAtomi.pdbx_PDB_model_num].childs[AtomsGroup],
-                      Ref(composdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.auth_asym_id, ckAtomi.auth_seq_id)]))
-                push!(chainsdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.auth_asym_id)].childs[AtomsGroup],
-                      Ref(composdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.auth_asym_id, ckAtomi.auth_seq_id)]))
+                      Ref(composdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id, ckAtomi.label_seq_id)]))
+                push!(chainsdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id)].childs[AtomsGroup],
+                      Ref(composdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id, ckAtomi.label_seq_id)]))
             end
         end
 
-        ckmodel = ckAtomi.ckAtomi.pdbx_PDB_model_num; ckchain = (ckAtomi.pdbx_PDB_model_num, ckAtomi.auth_asym_id)
-        ckcompd = (ckAtomi.pdbx_PDB_model_num, ckAtomi.auth_asym_id, ckAtomi.auth_seq_id)
+        ckmodel = ckAtomi.pdbx_PDB_model_num; ckchain = (ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id)
+        ckcompd = (ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id, ckAtomi.label_seq_id)
         
         push!(composdict[ckcompd].childs[Atoma], Ref(ckAtomi))
         push!(chainsdict[ckchain].childs[Atoma], Ref(ckAtomi))
         push!(modelsdict[ckmodel].childs[Atoma], Ref(ckAtomi))
+
+        @debug "!!!"
         
+        @debug begin
+            if length(ckAtomi.parents)!=0 
+                println("Error atom parrent recode", ckAtomi)
+                error("atom parrent recode")
+            end
+        end
         ckAtomi.parents[StructModel] = Ref(modelsdict[ckmodel])
         ckAtomi.parents[PDBsChain] = Ref(chainsdict[ckchain])
-        ckAtomi.parents[AtomsGroup] = Ref(composdict[ckidcompound])
+        ckAtomi.parents[AtomsGroup] = Ref(composdict[ckcompd])
     end
+    return (modelsdict, chainsdict, composdict)
 end
 
-function filterAtom(ChModel::Vector{Ref{StructModel}}, ChChain::Vector{Ref{PDBsChain}, ChCompo{Ref{AtomsGroup}}})
     
 end    #    module PDBxCIF
