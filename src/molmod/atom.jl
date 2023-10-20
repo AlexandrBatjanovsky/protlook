@@ -54,6 +54,7 @@ struct Atoma
     auth_asym_id::Symbol                            #19 Chain Id (label_asym_id)
     auth_atom_id::Symbol                            #20 Type Atom in compound(label_atom_id)
     pdbx_PDB_model_num::Int32                       #21 Model Index
+    parents::Dict{Type, Ref{}}                      # links to struct hierarhy elements
     function Atoma(ar::Vector{SubString{String}})
         #println(ar)
         if length(ar)!=21 error("atomic notation of incorrect length") end
@@ -85,27 +86,28 @@ struct Atoma
             acomp_id,
             aasym_id,
             aatom_id,
-            parse(Int32, ar[21]))
+            parse(Int32, ar[21]),
+            Dict{Type, Ref{}}())
     end
 end
 
 struct AtomsGroup
-    id::Tuple{Int32, AbstractString, Int32}
-    compoundname::String
-    childs::Dict{String, Vector{Ref{}}}
-    parent::Dict{String, Ref{}}
+    id::Tuple{Int32, Symbol, Int32}
+    compoundname::Symbol
+    childs::Dict{Type, Vector{Ref{}}}
+    parent::Dict{Type, Ref{}}
     #propertyes::Dict{AbstractString, AbstractString}
 end
 
 struct PDBsChain
-    id::Tuple{Int32, AbstractString}
-    childs::Dict{String, Vector{Ref{}}}
-    parent::Dict{String, Ref{}}
+    id::Tuple{Int32, Symbol}
+    childs::Dict{Type, Vector{Ref{}}}
+    parent::Dict{Type, Ref{}}
 end
 
 struct StructModel
     id::Int32
-    childs::Dict{String, Vector{Ref{}}}
+    childs::Dict{Type, Vector{Ref{}}}
 end
 
 

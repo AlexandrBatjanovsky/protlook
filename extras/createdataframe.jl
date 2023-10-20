@@ -23,6 +23,7 @@ args = docopt(argtable)
 println(args)
 using DataFrames, CSV
 
+#=
 if args["file"]
     framePDB = CSV.read(args["<name>"], DataFrame; header=false)
     CSV.write(args["--outfile"]*".csv",
@@ -34,4 +35,16 @@ if args["file"]
                      select(framePDB, :Column1 => (x -> .==(getindex.(splitext.(x),2), ".gz")) => :gz),
                      select(framePDB, :Column1 => (x -> occursin.("a", x)) => :cif),
                      rename(framePDB, 1=>:Comment)))
+end
+=#
+
+if args["file"]
+	pdblistfile = open(args["<name>"], "r")
+	pdblist::Vector{AbstractString} = split(readline(pdblistfile), ',')
+	close(pdblistfile)
+	framePDB = DataFrame([[],[],[],[],[]], [:PDBId,:FileName,:gz,:cif,:Comment])
+	for pdbid in pdblist
+		push!(framePDB, [pdbid, pdbid*".cif.gz", true, true, args["<name>"]])
+	end
+	CSV.write(args["--outfile"]*".csv", framePDB)
 end

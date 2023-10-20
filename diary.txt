@@ -1,0 +1,16 @@
+9.10.23 
+project envivrominent(pkg, generate, status, update, add, tomb)
+Lerche (?)
+13.10.2023
+ProjectCheck.jl
+16.10.2023
+protlook.jl - envivrominent activate
+17.10.2023
+Data.jl - export setting
+createdataframe.jl - optdoc, expand DataFrame
+18.10.2023
+PDBxCIF.jl - rewrite(check cicle going before, global flags,)
+PDBxCIF_DataFrame.jl - version PDBxCIF.jl with atomic ctructure based on DataFrames
+atom.jl - rewrite(Atoma change to closer cifdata, add constructor for parsing and check failed fields)
+19.10.2032
+PDBxCIF.jl - add constructMolecular function

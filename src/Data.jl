@@ -20,7 +20,7 @@ allatributes = Set{Vector{Symbol}}()
 for pdbr in eachrow(framePDB)
     print(pdbr[:PDBId], " ")
     ur = PDBxCIF.readCIF(pdbr[:PDBId], joinpath(settings[:DirOrg][:dsDir], pdbr[:FileName]), pdbr[:cif], pdbr[:gz])
-    println(size(ur))
+    if !ismissing(ur) println(size(ur)) end
 end
 
 print(allatributes)
