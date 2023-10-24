@@ -16,20 +16,17 @@ logga = SimpleLogger(open(loggf, "w"))
 
 framePDB = CSV.read(joinpath(settings[:DirOrg][:prDir], settings[:DatLst]), DataFrame; header=true)
 
-allatributes = Set{Vector{Symbol}}()
+ProtsData = Dict{Symbol, (Vector{Atoma}, Vector{AtomsGroup}, Vector{PDBsChain}, Vector{StructModel})}
 for pdbr in eachrow(framePDB)
     print(pdbr[:PDBId], " ")
-    ur = PDBxCIF.readCIF(pdbr[:PDBId], joinpath(settings[:DirOrg][:dsDir], pdbr[:FileName]), pdbr[:cif], pdbr[:gz])
-    if !ismissing(ur) 
-        model, chain, compo = PDBxCIF.constructMolecula(ur)
-        println(size(ur))
-        #for ato in ur
-        #    if ato.parents[StructModel][].childs[Atoma]
-        # end
+    atoma = PDBxCIF.readCIF(pdbr[:PDBId], joinpath(settings[:DirOrg][:dsDir], pdbr[:FileName]), pdbr[:cif], pdbr[:gz])
+    if !ismissing(atoma) 
+        model, chain, compo = PDBxCIF.constructMolecula(atoma)
     end
+
 end
 
-print(allatributes)
+for 
 
 #framePDB = CSV.read("utils/2", DataFrame; header=true)
 #for cifa in framePDB[!, :FileName]

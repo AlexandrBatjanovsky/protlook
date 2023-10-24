@@ -3,13 +3,13 @@ module PDBxCIF
 using ..Datas: settings
 
 using Downloads
-using Logging
-Logging.disable_logging(LogLevel(-2000))
-debug_logger = ConsoleLogger(stderr, Logging.Debug)
-global_logger(debug_logger)
 import TranscodingStreams: TranscodingStream as tcstream
 import CodecZlib: GzipDecompressor as uzip
 import OrderedCollections:OrderedDict;
+
+using Logging
+log_io = open("logfile.txt", "w")
+debug_logger = ConsoleLogger(log_io, Logging.Debug)
 
 include("molmod/atom.jl")
 
@@ -214,12 +214,15 @@ function constructMolecula(atomiccontent::Vector{Atoma})
         push!(chainsdict[ckchain].childs[Atoma], Ref(ckAtomi))
         push!(modelsdict[ckmodel].childs[Atoma], Ref(ckAtomi))
         
-        @debug begin
+        with_logger(debug_logger) do
             if length(ckAtomi.parents)!=0 
-                println("Error atom parrent recode", ckAtomi)
-                error("atom parrent recode")
+                @debug begin
+                    println("Error atom parrent recode", ckAtomi)
+                    error("atom parrent recode")
+                end
             end
-        end
+        end 
+
         ckAtomi.parents[StructModel] = Ref(modelsdict[ckmodel])
         ckAtomi.parents[PDBsChain] = Ref(chainsdict[ckchain])
         ckAtomi.parents[AtomsGroup] = Ref(composdict[ckcompd])
