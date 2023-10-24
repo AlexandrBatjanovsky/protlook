@@ -213,8 +213,6 @@ function constructMolecula(atomiccontent::Vector{Atoma})
         push!(composdict[ckcompd].childs[Atoma], Ref(ckAtomi))
         push!(chainsdict[ckchain].childs[Atoma], Ref(ckAtomi))
         push!(modelsdict[ckmodel].childs[Atoma], Ref(ckAtomi))
-
-        @debug "!!!"
         
         @debug begin
             if length(ckAtomi.parents)!=0 
