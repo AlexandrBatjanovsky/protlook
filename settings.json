@@ -1,4 +1,12 @@
 {
     "CmpLib": "/home/alexandersn/Work/Proteins/protlook/wdata/components.cif",
-    "DatLst": "/home/alexandersn/Work/Proteins/protlook/wdata/PDBSelector.csv"
+    "DirOrg": {
+        "dsDir": "/home/alexandersn/Work/Proteins/protlook/wdata/structs",
+        "prDir": "/home/alexandersn/Work/Proteins/protlook",
+        "scDir": "/home/alexandersn/Work/Proteins/protlook/src",
+        "wdDir": "/home/alexandersn/Work/Proteins/protlook/wdata",
+        "lgDir": "/home/alexandersn/Work/Proteins/protlook/wdata/logs"
+    },
+    "CmpInd": "/home/alexandersn/Work/Proteins/protlook/wdata/components.cif.ind",
+    "DatLst": "/home/alexandersn/Work/Proteins/protlook/wdata/PDBSelector_f3b70.csv"
 }

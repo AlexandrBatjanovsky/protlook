@@ -24,9 +24,16 @@ using JSON3
 if !isfile(joinpath(projectDir, "settings.json"))
 	println("Create zero settings")
 	settings = Dict(:DatLst=>
-					    normpath(joinpath(projectDir, dataDir, "PDBSelector.csv")),
+					    normpath(joinpath(projectDir, dataDir, "PDBSelector_f3b70.csv")),    #PDBSelector_f3b70
 					:CmpLib=>
-						normpath(joinpath(projectDir, dataDir, "components.cif")))
+						normpath(joinpath(projectDir, dataDir, "components.cif")),
+					:CmpInd=>
+						normpath(joinpath(projectDir, dataDir, "components.cif.ind")),
+					:DirOrg=> Dict(:prDir=>projectDir,
+								   :scDir=>joinpath(projectDir, srcDir),
+								   :wdDir=>joinpath(projectDir, dataDir),
+								   :dsDir=>normpath(joinpath(projectDir, structDir)),
+								   :lgDir=>normpath(joinpath(projectDir, logDir))))
 
 	open(joinpath(projectDir, "settings.json"), "w") do f
 		JSON3.pretty(f, settings) end
@@ -42,11 +49,10 @@ settings[:DirOrg] = Dict(:prDir=>projectDir,
 
 #check and exit if absent list of pdb-structures for working
 if !isfile(settings[:DatLst])
-	@error "Need data list $(settings[:CmpLib])"
+	@error "Need data list $(settings[:DatLst])"
 	error("Absent pdblist file")
 end
 
-using JLD
 #check and download Chemical Component Dictionary and create indexing for stream
 if !isfile(settings[:CmpLib])
 	@info "Download absent Chemical Component Dictionary to $(settings[:CmpLib])."
@@ -54,20 +60,20 @@ if !isfile(settings[:CmpLib])
 	download("https://files.wwpdb.org/pub/pdb/data/monomers/components.cif", settings[:CmpLib])
 	println("done.")
 end
-if !isfile(settings[:CmpLib]*".ind")
-	@info "Create compounds indexing file $(settings[:CmpLib]*".ind")"
+
+using JLD
+if !isfile(settings[:CmpInd])
+ 	@info "Create compounds indexing file $(settings[:CmpLib]*".ind")"
 	print("Create compounds indexing file. Wait...")
 	dictofcompounds = Dict{Symbol, Int64}()
 	PDBlibfile = open(settings[:CmpLib], "r") 
-	#datas = read(PDBlibfile, String)
-	#uf = 0
 	for rline in eachline(PDBlibfile)
 		#println(rline, "!!", uf)
 		if length(rline)>=8 && rline[1:5] == "data_"
 			dictofcompounds[Symbol(rline[6:8])] = position(PDBlibfile) 
 		end
 	end
-	jldopen(settings[:CmpLib]*".ind", "w") do indPDBlibfile
+	jldopen(settings[:CmpInd], "w") do indPDBlibfile
 		write(indPDBlibfile, "CompoundsDict", dictofcompounds) end
 	println("done.")
 end

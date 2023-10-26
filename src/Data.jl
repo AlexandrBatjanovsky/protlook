@@ -1,7 +1,7 @@
 module Datas
 
 using DataFrames, CSV
-using Glob
+#using Glob
 using Logging
 
 using ..ProtLook: settings # settings
@@ -15,18 +15,24 @@ loggf = joinpath(settings[:DirOrg][:lgDir],"dlog.log")
 logga = SimpleLogger(open(loggf, "w"))
 
 framePDB = CSV.read(joinpath(settings[:DirOrg][:prDir], settings[:DatLst]), DataFrame; header=true)
-
-ProtsData = Dict{Symbol, (Vector{Atoma}, Vector{AtomsGroup}, Vector{PDBsChain}, Vector{StructModel})}
+println(settings[:DatLst])
+ProtsData = Dict{Symbol, @NamedTuple{atomic::Vector{Atoma}, 
+                                     compic::Dict{Tuple{Int32, Symbol, Int32}, AtomsGroup}, 
+                                     chanic::Dict{Tuple{Int32, Symbol}, PDBsChain}, 
+                                     struic::Dict{Int32, StructModel}}}()
 for pdbr in eachrow(framePDB)
-    print(pdbr[:PDBId], " ")
-    atoma = PDBxCIF.readCIF(pdbr[:PDBId], joinpath(settings[:DirOrg][:dsDir], pdbr[:FileName]), pdbr[:cif], pdbr[:gz])
-    if !ismissing(atoma) 
-        model, chain, compo = PDBxCIF.constructMolecula(atoma)
-    end
-
+    #if Symbol(pdbr[:PDBId]) ∉ keys(ProtsData)
+        print(pdbr[:PDBId], " ")
+        atomica = PDBxCIF.readCIF(pdbr[:PDBId], joinpath(settings[:DirOrg][:dsDir], pdbr[:FileName]), pdbr[:cif], pdbr[:gz])
+        if !ismissing(atomica) 
+            print(size(atomica))
+            #ProtsData[Symbol(pdbr[:PDBId])] = NamedTuple{(:atomic, :compic, :chanic, :struic)}((atomica, PDBxCIF.constructMolecula(atomica)...))
+            #println(Base.summarysize(ProtsData))
+        end
+    #end
 end
 
-for 
+include("Chemistry.jl")
 
 #framePDB = CSV.read("utils/2", DataFrame; header=true)
 #for cifa in framePDB[!, :FileName]

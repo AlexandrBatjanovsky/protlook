@@ -5,8 +5,6 @@ export StructModel
 export AtomsGroup
 export PDBsChain
 
-using StaticArrays
-
 
 #= struct Atoma
     id::Union{Int32, Nothing}
@@ -43,9 +41,9 @@ struct Atoma
     label_entity_id::Symbol                         #8  ?
     label_seq_id::Int32                             #9  Compound(atomic group) index (auth_seq_id)
     pdbx_PDB_ins_code::Symbol                       #10 ?
-    Cartn_x                                         #11 Coords
-    Cartn_y                                         #12
-    Cartn_z                                         #13
+    Cartn_x::Float32                                #11 Coords
+    Cartn_y::Float32                                #12
+    Cartn_z::Float32                                #13
     occupancy::Float32                              #14 Part position detection
     B_iso_or_equiv::Float32                         #15 B-factor
     pdbx_formal_charge::Union{Float32, Nothing}     #16 Formal pdb charge
@@ -88,6 +86,68 @@ struct Atoma
             aatom_id,
             parse(Int32, ar[21]),
             Dict{Type, Ref{}}())
+    end
+end
+
+struct Atomc
+    comp_id::Symbol,
+    atom_id ::Symbol,
+    alt_atom_id::Symbol,
+    type_symbol::Symbol,
+    charge::Float32,
+    pdbx_align::Int16,
+    pdbx_aromatic_flag::Bool,
+    pdbx_leaving_atom_flag::Bool,
+    pdbx_stereo_config::Bool,
+    model_Cartn_x::Float32, 
+    model_Cartn_y::Float32, 
+    model_Cartn_z::Float32, 
+    pdbx_model_Cartn_x_ideal::Float32,
+    pdbx_model_Cartn_y_ideal::Float32, 
+    pdbx_model_Cartn_z_ideal::Float32, 
+    pdbx_component_atom_id::Symbol,
+    pdbx_component_comp_id::Symbol, 
+    pdbx_ordinal::Int16,
+    bonds::Dict{Symbol, Symbol}
+    function Atomc(ar::Vector{SubString{String}})
+        new(Symbol(ar[1]),
+            Symbol(ar[2]),
+            Symbol(ar[3]),
+            Symbol(ar[4]),
+            parse(Float32, ar[5]),
+            parse(Int16, ar[6]),
+            ar[7] == "Y",
+            ar[8] == "Y",
+            ar[9] == "Y",
+            parse(Float32, ar[10]),
+            parse(Float32, ar[11]),
+            parse(Float32, ar[12]),
+            parse(Float32, ar[13]),
+            parse(Float32, ar[14]),
+            parse(Float32, ar[15]),
+            Symbol(ar[16]),
+            Symbol(ar[17]),
+            parse(Int16, ar[18]),
+            Dict{Symbol, Ref{}}())
+    end
+end
+
+struct Bondc
+    comp_id::Symbol, 
+    atom_id_1::Symbol, 
+    atom_id_2::Symbol, 
+    value_order::Symbol,
+    pdbx_aromatic_flag::Bool, 
+    pdbx_stereo_config::Bool,
+    pdbx_ordinal::Int16
+    function Bondc(ar::Vector{SubString{String}})
+        new(Symbol(ar[1]),
+            Symbol(ar[2]),
+            Symbol(ar[3]),
+            Symbol(ar[4]),
+            ar[5] == "Y",
+            ar[6] == "Y",
+            parse(Int16, ar[7]))
     end
 end
 

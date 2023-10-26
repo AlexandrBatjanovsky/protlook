@@ -5,11 +5,11 @@ using ..Datas: settings
 using Downloads
 import TranscodingStreams: TranscodingStream as tcstream
 import CodecZlib: GzipDecompressor as uzip
-import OrderedCollections:OrderedDict;
 
 using Logging
 log_io = open("logfile.txt", "w")
 debug_logger = ConsoleLogger(log_io, Logging.Debug)
+#global_logger(debug_logger)
 
 include("molmod/atom.jl")
 
@@ -75,7 +75,7 @@ function readCIF(PDBId::AbstractString, fname::AbstractString, cifflag::Bool, zi
 
     # cif loops split and formal examin
     # категории текущего цикла
-    cur_loop_categories = OrderedDict{Symbol, OrderedDict{Symbol, Vector{String}}}()
+    cur_loop_categories = Dict{Symbol, Dict{Symbol, Vector{String}}}()
     # возвращаемый список всех атомных записей в виде кортежа именнованного категориями
     # -текущего цикла
     ##atomicdata = Vector{Atoma}
@@ -91,29 +91,34 @@ function readCIF(PDBId::AbstractString, fname::AbstractString, cifflag::Bool, zi
             global flag_cate = true 
             numloop += 1
             empty!(cur_loop_categories)     # can be save to globalloops
-        elseif cifsplitline[1][1] == '_'
-            if !haskey(cur_loop_categories, Symbol(split(cifsplitline[1], ".")[1]))
-                cur_loop_categories[Symbol(split(cifsplitline[1], ".")[1])] = 
-                    OrderedDict{Symbol, Vector{String}}() end
-            if !haskey(cur_loop_categories[Symbol(split(cifsplitline[1], ".")[1])],
-                       Symbol(split(cifsplitline[1], ".")[2]))
-                cur_loop_categories[Symbol(split(cifsplitline[1], ".")[1])][
-                                    Symbol(split(cifsplitline[1], ".")[2])] =
-                    Vector{String}(cifsplitline[2:end])
-                @debug "Split loop after 2" cifsplitline[2:end]
+        elseif cifsplitline[1][1] == '_' 
+            if '.' ∈ cifsplitline[1]
+                if !haskey(cur_loop_categories, Symbol(split(cifsplitline[1], ".")[1]))
+                    cur_loop_categories[Symbol(split(cifsplitline[1], ".")[1])] = 
+                        Dict{Symbol, Vector{String}}() end
+                # println(cifsplitline)
+                if !haskey(cur_loop_categories[Symbol(split(cifsplitline[1], ".")[1])],
+                        Symbol(split(cifsplitline[1], ".")[2]))
+                    cur_loop_categories[Symbol(split(cifsplitline[1], ".")[1])][
+                                        Symbol(split(cifsplitline[1], ".")[2])] =
+                        Vector{String}(cifsplitline[2:end])
+                    @debug "Split loop after 2" cifsplitline[2:end]
+                else
+                    @warn "In $(fname) categori $(split(cifsplitline[1], ".")[1]) attribute\
+                        $(split(cifsplitline[1], ".")[2]) repeat"
+                    append!(cur_loop_categories[Symbol(split(cifsplitline[1], ".")[1])][
+                                                Symbol(split(cifsplitline[1], ".")[2])],
+                            Vector{String}(cifsplitline[2:end]))
+                end
             else
-                @warn "In $(fname) categori $(split(cifsplitline[1], ".")[1]) attribute\
-                       $(split(cifsplitline[1], ".")[2]) repeat"
-                append!(cur_loop_categories[Symbol(split(cifsplitline[1], ".")[1])][
-                                            Symbol(split(cifsplitline[1], ".")[2])],
-                        Vector{String}(cifsplitline[2:end]))
+                @warn "Loop category format not parsed $(cifline)"
             end
         elseif cifsplitline[1] == "ATOM" || cifsplitline[1] == "HETATM"
             if flag_atom && !haskey(cur_loop_categories, :_atom_site)
-                @warn "In $(fname) atom record with $(keys(cur_loop_categories)) categories. Text: \" $(cifline)\""
+                @debug "In $(fname) atom record with $(keys(cur_loop_categories)) categories. Text: \" $(cifline)\""
             else
                 global flag_atom = false
-                if flag_cate && Tuple(keys(cur_loop_categories[:_atom_site])) != fieldnames(Atoma)[1:length(fieldnames(Atoma))-1]
+                if flag_cate && !issetequal(keys(cur_loop_categories[:_atom_site]), fieldnames(Atoma)[1:length(fieldnames(Atoma))-1])
                     @warn "In $(fname) Conflict names :_atom_site and Atoma: $(keys(cur_loop_categories[:_atom_site]))\
                     $(fieldnames(Atoma)[1:length(fieldnames(Atoma))-1])"
                     return missing
@@ -149,7 +154,7 @@ function constructMolecula(atomiccontent::Vector{Atoma})
     push!(modelsdict[ckmodel].childs[PDBsChain], Ref(chainsdict[ckchain]))
 
     ckcompd = (ckmodel, atomiccontent[1].label_asym_id, atomiccontent[1].label_seq_id)
-    composdict = OrderedDict{Tuple{Int32, Symbol, Int32}, AtomsGroup}(ckcompd=>
+    composdict = Dict{Tuple{Int32, Symbol, Int32}, AtomsGroup}(ckcompd=>
         AtomsGroup(ckcompd, atomiccontent[1].auth_comp_id,
                    Dict(Atoma=>Vector{Ref{Atoma}}()),
                    Dict(PDBsChain=>Ref{PDBsChain}(chainsdict[ckchain]),
@@ -227,7 +232,7 @@ function constructMolecula(atomiccontent::Vector{Atoma})
         ckAtomi.parents[PDBsChain] = Ref(chainsdict[ckchain])
         ckAtomi.parents[AtomsGroup] = Ref(composdict[ckcompd])
     end
-    return (modelsdict, chainsdict, composdict)
+    return (composdict, chainsdict, modelsdict)
 end
 
     
