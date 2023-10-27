@@ -5,6 +5,7 @@ export StructModel
 export AtomsGroup
 export PDBsChain
 
+using StaticArrays: SVector
 
 #= struct Atoma
     id::Union{Int32, Nothing}
@@ -89,6 +90,25 @@ struct Atoma
     end
 end
 
+struct Bondc
+    comp_id::Symbol, 
+    atom_id_1::Symbol, 
+    atom_id_2::Symbol, 
+    value_order::Symbol,
+    pdbx_aromatic_flag::Bool, 
+    pdbx_stereo_config::Bool,
+    pdbx_ordinal::Int16
+    function Bondc(ar::Vector{SubString{String}})
+        new(Symbol(ar[1]),
+            Symbol(ar[2]),
+            Symbol(ar[3]),
+            Symbol(ar[4]),
+            ar[5] == "Y",
+            ar[6] == "Y",
+            parse(Int16, ar[7]))
+    end
+end
+
 struct Atomc
     comp_id::Symbol,
     atom_id ::Symbol,
@@ -108,7 +128,7 @@ struct Atomc
     pdbx_component_atom_id::Symbol,
     pdbx_component_comp_id::Symbol, 
     pdbx_ordinal::Int16,
-    bonds::Dict{Symbol, Symbol}
+    bonds::Dict{Symbol, Tuple{Bondc, Float32, Dict{Symbol, Float32}}}
     function Atomc(ar::Vector{SubString{String}})
         new(Symbol(ar[1]),
             Symbol(ar[2]),
@@ -128,26 +148,7 @@ struct Atomc
             Symbol(ar[16]),
             Symbol(ar[17]),
             parse(Int16, ar[18]),
-            Dict{Symbol, Ref{}}())
-    end
-end
-
-struct Bondc
-    comp_id::Symbol, 
-    atom_id_1::Symbol, 
-    atom_id_2::Symbol, 
-    value_order::Symbol,
-    pdbx_aromatic_flag::Bool, 
-    pdbx_stereo_config::Bool,
-    pdbx_ordinal::Int16
-    function Bondc(ar::Vector{SubString{String}})
-        new(Symbol(ar[1]),
-            Symbol(ar[2]),
-            Symbol(ar[3]),
-            Symbol(ar[4]),
-            ar[5] == "Y",
-            ar[6] == "Y",
-            parse(Int16, ar[7]))
+            Dict{Symbol, Tuple{Bondc, Float32, Dict{Symbol, Float32}}}())
     end
 end
 

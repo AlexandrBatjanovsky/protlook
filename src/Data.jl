@@ -32,7 +32,7 @@ for pdbr in eachrow(framePDB)
     #end
 end
 
-include("Chemistry.jl")
+include("StereoChem.jl")
 
 #framePDB = CSV.read("utils/2", DataFrame; header=true)
 #for cifa in framePDB[!, :FileName]
