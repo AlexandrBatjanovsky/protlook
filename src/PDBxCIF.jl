@@ -76,6 +76,7 @@ function readCIF(PDBId::AbstractString, fname::AbstractString, cifflag::Bool, zi
     # cif loops split and formal examin
     # категории текущего цикла
     cur_loop_categories = Dict{Symbol, Dict{Symbol, Vector{String}}}()
+    cur_loop_atributes = Vector{Symbol}()
     # возвращаемый список всех атомных записей в виде кортежа именнованного категориями
     # -текущего цикла
     ##atomicdata = Vector{Atoma}
@@ -91,6 +92,7 @@ function readCIF(PDBId::AbstractString, fname::AbstractString, cifflag::Bool, zi
             global flag_cate = true 
             numloop += 1
             empty!(cur_loop_categories)     # can be save to globalloops
+            empty!(cur_loop_atributes)
         elseif cifsplitline[1][1] == '_' 
             if '.' ∈ cifsplitline[1]
                 if !haskey(cur_loop_categories, Symbol(split(cifsplitline[1], ".")[1]))
@@ -102,7 +104,7 @@ function readCIF(PDBId::AbstractString, fname::AbstractString, cifflag::Bool, zi
                     cur_loop_categories[Symbol(split(cifsplitline[1], ".")[1])][
                                         Symbol(split(cifsplitline[1], ".")[2])] =
                         Vector{String}(cifsplitline[2:end])
-                    @debug "Split loop after 2" cifsplitline[2:end]
+                    push!(cur_loop_atributes, Symbol(split(cifsplitline[1], ".")[2]))
                 else
                     @warn "In $(fname) categori $(split(cifsplitline[1], ".")[1]) attribute\
                         $(split(cifsplitline[1], ".")[2]) repeat"
@@ -115,11 +117,11 @@ function readCIF(PDBId::AbstractString, fname::AbstractString, cifflag::Bool, zi
             end
         elseif cifsplitline[1] == "ATOM" || cifsplitline[1] == "HETATM"
             if flag_atom && !haskey(cur_loop_categories, :_atom_site)
-                @debug "In $(fname) atom record with $(keys(cur_loop_categories)) categories. Text: \" $(cifline)\""
+                @warn "In $(fname) atom record with $(keys(cur_loop_categories)) categories. Text: \" $(cifline)\""
             else
                 global flag_atom = false
-                if flag_cate && !issetequal(keys(cur_loop_categories[:_atom_site]), fieldnames(Atoma)[1:length(fieldnames(Atoma))-1])
-                    @warn "In $(fname) Conflict names :_atom_site and Atoma: $(keys(cur_loop_categories[:_atom_site]))\
+                if flag_cate && !isempty(setdiff(cur_loop_atributes, fieldnames(Atoma)))
+                    @warn "In $(fname) Conflict names :_atom_site and Atoma: $(cur_loop_atributes))\
                     $(fieldnames(Atoma)[1:length(fieldnames(Atoma))-1])"
                     return missing
                 end
@@ -128,7 +130,7 @@ function readCIF(PDBId::AbstractString, fname::AbstractString, cifflag::Bool, zi
                     if length(atomicloop) > 0 @warn "In $(fname) atom records in different loops" end
                     push!(atomicloop, numloop)
                 end
-                push!(atomica, Atoma(cifsplitline))
+                push!(atomica, Atoma(NamedTuple{Tuple(cur_loop_atributes)}(cifsplitline)))
             end
         end
     end

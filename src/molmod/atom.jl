@@ -53,50 +53,66 @@ struct Atoma
     auth_asym_id::Symbol                            #19 Chain Id (label_asym_id)
     auth_atom_id::Symbol                            #20 Type Atom in compound(label_atom_id)
     pdbx_PDB_model_num::Int32                       #21 Model Index
+    calc_flag::Union{Int16, Nothing}                 # calc or intense 
+    Cartn_x_esd::Union{Float32, Nothing}
+    Cartn_y_esd::Union{Float32, Nothing}
+    Cartn_z_esd::Union{Float32, Nothing}
+    occupancy_esd::Union{Float32, Nothing}
+    B_iso_or_equiv_esd::Union{Float32, Nothing}
     parents::Dict{Type, Ref{}}                      # links to struct hierarhy elements
-    function Atoma(ar::Vector{SubString{String}})
-        #println(ar)
-        if length(ar)!=21 error("atomic notation of incorrect length") end
-        latom_id = (ar[4]  in ("?", ".") ? Symbol(ar[20]) : Symbol(ar[4]))
-        aatom_id = (ar[20] in ("?", ".") ? Symbol(ar[4]) : Symbol(ar[20]))
-        lcomp_id = (ar[6]  in ("?", ".") ? Symbol(ar[18]) : Symbol(ar[6]))
-        acomp_id = (ar[18] in ("?", ".") ? Symbol(ar[6]) : Symbol(ar[18]))
-        lasym_id = (ar[7]  in ("?", ".") ? Symbol(ar[19]) : Symbol(ar[7]))
-        aasym_id = (ar[19] in ("?", ".") ? Symbol(ar[7]) : Symbol(ar[19]))
-        lseq_id  = (ar[9]  in ("?", ".") ? parse(Int32, ar[17]) : parse(Int32, ar[9]))
-        aseq_id  = (ar[17] in ("?", ".") ? parse(Int32, ar[9]) : parse(Int32, ar[17]))
-        new(Symbol(ar[1]), 
-            parse(Int32, ar[2]), 
-            Symbol(ar[3]), 
+    function Atoma(ar::NamedTuple)
+        latom_id = ar.label_atom_id  in ("?", ".") ? Symbol(ar.auth_atom_id) : Symbol(ar.label_atom_id)
+        aatom_id = ar.auth_atom_id in ("?", ".") ? Symbol(ar.label_atom_id) : Symbol(ar.auth_atom_id)
+        lcomp_id = ar.label_comp_id  in ("?", ".") ? Symbol(ar.auth_comp_id) : Symbol(ar.label_comp_id)
+        acomp_id = ar.auth_comp_id in ("?", ".") ? Symbol(ar.label_comp_id) : Symbol(ar.auth_comp_id)
+        lasym_id = ar.label_asym_id  in ("?", ".") ? Symbol(ar.auth_asym_id) : Symbol(ar.label_asym_id)
+        aasym_id = ar.auth_asym_id in ("?", ".") ? Symbol(ar.label_asym_id) : Symbol(ar.auth_asym_id)
+        lseq_id  = ar.label_seq_id  in ("?", ".") ? parse(Int32, ar.auth_seq_id) : parse(Int32, ar.label_seq_id)
+        aseq_id  = ar.auth_seq_id in ("?", ".") ? parse(Int32, ar.label_seq_id) : parse(Int32, ar.auth_seq_id)
+        calc_flag = :calc_flag in keys(ar) ? tryparse(Int16, ar.calc_flag) : nothing
+        Cartn_x_esd = :Cartn_x_esd in keys(ar) ? tryparse(Float32, ar.Cartn_x_esd) : nothing
+        Cartn_y_esd = :Cartn_y_esd in keys(ar) ? tryparse(Float32, ar.Cartn_y_esd) : nothing
+        Cartn_z_esd = :Cartn_z_esd in keys(ar) ? tryparse(Float32, ar.Cartn_z_esd) : nothing
+        occupancy_esd = :occupancy_esd in keys(ar) ? tryparse(Float32, ar.occupancy_esd) : nothing
+        B_iso_or_equiv_esd = :B_iso_or_equiv_esd in keys(ar) ? tryparse(Float32, ar.B_iso_or_equiv_esd) : nothing
+        new(Symbol(ar.group_PDB), 
+            parse(Int32, ar.id), 
+            Symbol(ar.type_symbol), 
             latom_id, 
-            Symbol(ar[5]),
+            Symbol(ar.label_alt_id),
             lcomp_id,
             lasym_id,
-            Symbol(ar[8]),
+            Symbol(ar.label_entity_id),
             lseq_id,
-            Symbol(ar[10]),
-            parse(Float32, ar[11]),
-            parse(Float32, ar[12]),
-            parse(Float32, ar[13]),
-            parse(Float32, ar[14]),
-            parse(Float32, ar[15]),
-            tryparse(Float32, ar[16]),
+            Symbol(ar.pdbx_PDB_ins_code),
+            parse(Float32, ar.Cartn_x),
+            parse(Float32, ar.Cartn_y),
+            parse(Float32, ar.Cartn_z),
+            parse(Float32, ar.occupancy),
+            parse(Float32, ar.B_iso_or_equiv),
+            tryparse(Float32, ar.pdbx_formal_charge),
             aseq_id,
             acomp_id,
             aasym_id,
             aatom_id,
-            parse(Int32, ar[21]),
+            parse(Int32, ar.pdbx_PDB_model_num),
+            calc_flag,
+            Cartn_x_esd,
+            Cartn_y_esd,
+            Cartn_z_esd,
+            occupancy_esd,
+            B_iso_or_equiv_esd,
             Dict{Type, Ref{}}())
     end
 end
 
 struct Bondc
-    comp_id::Symbol, 
-    atom_id_1::Symbol, 
-    atom_id_2::Symbol, 
-    value_order::Symbol,
-    pdbx_aromatic_flag::Bool, 
-    pdbx_stereo_config::Bool,
+    comp_id::Symbol
+    atom_id_1::Symbol
+    atom_id_2::Symbol
+    value_order::Symbol
+    pdbx_aromatic_flag::Bool
+    pdbx_stereo_config::Bool
     pdbx_ordinal::Int16
     function Bondc(ar::Vector{SubString{String}})
         new(Symbol(ar[1]),
@@ -110,25 +126,25 @@ struct Bondc
 end
 
 struct Atomc
-    comp_id::Symbol,
-    atom_id ::Symbol,
-    alt_atom_id::Symbol,
-    type_symbol::Symbol,
-    charge::Float32,
-    pdbx_align::Int16,
-    pdbx_aromatic_flag::Bool,
-    pdbx_leaving_atom_flag::Bool,
-    pdbx_stereo_config::Bool,
-    model_Cartn_x::Float32, 
-    model_Cartn_y::Float32, 
-    model_Cartn_z::Float32, 
-    pdbx_model_Cartn_x_ideal::Float32,
-    pdbx_model_Cartn_y_ideal::Float32, 
-    pdbx_model_Cartn_z_ideal::Float32, 
-    pdbx_component_atom_id::Symbol,
-    pdbx_component_comp_id::Symbol, 
-    pdbx_ordinal::Int16,
-    bonds::Dict{Symbol, Tuple{Bondc, Float32, Dict{Symbol, Float32}}}
+    comp_id::Symbol
+    atom_id::Symbol
+    alt_atom_id::Symbol
+    type_symbol::Symbol
+    charge::Float32
+    pdbx_align::Int16
+    pdbx_aromatic_flag::Bool
+    pdbx_leaving_atom_flag::Bool
+    pdbx_stereo_config::Bool
+    model_Cartn_x::Float32 
+    model_Cartn_y::Float32
+    model_Cartn_z::Float32
+    pdbx_model_Cartn_x_ideal::Float32
+    pdbx_model_Cartn_y_ideal::Float32
+    pdbx_model_Cartn_z_ideal::Float32
+    pdbx_component_atom_id::Symbol
+    pdbx_component_comp_id::Symbol
+    pdbx_ordinal::Int16
+    # bonds::Dict{Symbol, Tuple{Bondc, Float32, Dict{Symbol, Float32}}}
     function Atomc(ar::Vector{SubString{String}})
         new(Symbol(ar[1]),
             Symbol(ar[2]),
@@ -147,8 +163,8 @@ struct Atomc
             parse(Float32, ar[15]),
             Symbol(ar[16]),
             Symbol(ar[17]),
-            parse(Int16, ar[18]),
-            Dict{Symbol, Tuple{Bondc, Float32, Dict{Symbol, Float32}}}())
+            parse(Int16, ar[18]))
+            # Dict{Symbol, Tuple{Bondc, Float32, Dict{Symbol, Float32}}}())
     end
 end
 

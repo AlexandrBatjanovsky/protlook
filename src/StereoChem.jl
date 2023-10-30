@@ -12,7 +12,7 @@ compoundoffset = jldopen(settings[:CmpInd], "r") do file
     read(file, "CompoundsDict")
 end
 SetCompositions = Dict{Symbol, @NamedTuple{atomc::Dict{Symbol, Atomc},
-                                           catec::Dict{Symbol, Dict{Symbol, Vector{Strings}}}}}()
+                                           catec::Dict{Symbol, Dict{Symbol, Vector{String}}}}}()
 
 function loadCompound!(compoundname::Symbol)
     global SetCompositions
@@ -29,7 +29,7 @@ function loadCompound!(compoundname::Symbol)
         split_rl = split(rl)
         if length(split_rl)>0 && split_rl[1] =="_"
             categ, atrib = split(split_rl[1], '.')
-            if curcategory == :absence curcategory = Symbol(categ)
+            if curcategory == :absence curcategory = Symbol(categ) end
             if Symbol(categ) ∉ keys(categories) categories[Symbol(categ)] = Dict{Symbol, String}() end
             categories[Symbol(categ)][Symbol(atrib)] = length(split_rl) > 1 ? split_rl[2:end] : []
         end
@@ -45,6 +45,7 @@ function loadCompound!(compoundname::Symbol)
                 if at2 ∉ keys(compobonds) compobonds[at2] = Dict{Symbol, Bondc}() end
                 compobonds[at1][at2] = compobonds[at2][at1] = Bonds(split_rl)
             end
+        end
         rl = readline(compoundlibfile)
     end
 
