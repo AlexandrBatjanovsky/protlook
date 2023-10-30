@@ -17,7 +17,7 @@ Options:
   --outfile=<out>     Output file [default: outfile]
   --fpID=<fc>         Ferst position for PDBId  [default: 1].
   --spID=<sc>         Stop  position for PDBId  [default: 4].
-
+  --delim=<dl>        ID-delimiter. Absent = " " or "\n"
 """
 args = docopt(argtable)
 println(args)
@@ -37,14 +37,21 @@ if args["file"]
                      rename(framePDB, 1=>:Comment)))
 end
 =#
-
+global pdblist = Vector{AbstractString}()
 if args["file"]
-	pdblistfile = open(args["<name>"], "r")
-	pdblist::Vector{AbstractString} = split(readline(pdblistfile), ',')
-	close(pdblistfile)
-	framePDB = DataFrame([[],[],[],[],[]], [:PDBId,:FileName,:gz,:cif,:Comment])
-	for pdbid in pdblist
-		push!(framePDB, [pdbid, pdbid*".cif.gz", true, true, args["<name>"]])
-	end
-	CSV.write(args["--outfile"]*".csv", framePDB)
-end
+	  open(args["<name>"], "r") do f
+        global pdblist
+        if isnothing(args["--delim"])
+	          global pdblist = split(read(f, String)) 
+        else
+            global pdblist = split(read(f, String), args["--delim"])  
+        end
+    end
+    pdblist = [iad[parse(Int16, args["--fpID"]):parse(Int16, args["--spID"])] for iad in pdblist]
+    unique!(pdblist)
+    framePDB = DataFrame([[],[],[],[],[]], [:PDBId,:FileName,:gz,:cif,:Comment])
+    for pdbid in pdblist
+	      push!(framePDB, [pdbid, pdbid*".cif.gz", true, true, args["<name>"]])
+    end
+    CSV.write(args["--outfile"]*".csv", framePDB)
+  end

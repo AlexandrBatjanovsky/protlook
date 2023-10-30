@@ -12,7 +12,7 @@ using .PDBxCIF
 #using .AtomicProcessing
 
 loggf = joinpath(settings[:DirOrg][:lgDir],"dlog.log")
-logga = SimpleLogger(open(loggf, "w"))
+logga = SimpleLogger(open(loggf, "w+"))
 
 framePDB = CSV.read(joinpath(settings[:DirOrg][:prDir], settings[:DatLst]), DataFrame; header=true)
 println(settings[:DatLst])
@@ -23,7 +23,7 @@ ProtsData = Dict{Symbol, @NamedTuple{atomic::Vector{Atoma},
 for pdbr in eachrow(framePDB)
     #if Symbol(pdbr[:PDBId]) ∉ keys(ProtsData)
         print(pdbr[:PDBId], " ")
-        atomica = PDBxCIF.readCIF(pdbr[:PDBId], joinpath(settings[:DirOrg][:dsDir], pdbr[:FileName]), pdbr[:cif], pdbr[:gz])
+        atomica = PDBxCIF.readCIF(pdbr[:PDBId], joinpath(settings[:DirOrg][:dsDir], lowercase(pdbr[:FileName])), pdbr[:cif], pdbr[:gz])
         if !ismissing(atomica) 
             print(size(atomica))
             #ProtsData[Symbol(pdbr[:PDBId])] = NamedTuple{(:atomic, :compic, :chanic, :struic)}((atomica, PDBxCIF.constructMolecula(atomica)...))

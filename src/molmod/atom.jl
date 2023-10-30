@@ -7,30 +7,6 @@ export PDBsChain
 
 using StaticArrays: SVector
 
-#= struct Atoma
-    id::Union{Int32, Nothing}
-    hetatom::Bool
-    atom_name::Union{String, Nothing}
-    alternativ::Union{String, Nothing}
-    coords::SVector{3, T} where T<:Union{Float32, Nothing}
-    occupancy::Union{Float32, Nothing}
-    bfactor::Union{Float32, Nothing}
-
-    element::Union{String, Nothing}
-    charge::Union{Float32, Nothing}
-    
-    model::Union{Int32, Nothing}
-    chain::Union{String, Nothing}
-    compound::Union{String, Nothing}
-    idcompound::Union{Int32, Nothing}
-
-    i_categori::Vector{Int8}
-    parents::Dict{String, Ref{}}
-    #properties::Dict{String, Union{Number, AbstractString}}
-    #bonds::Vector{Ref}
-end
- =#
-
 struct Atoma
     group_PDB::Symbol                               #1  HETATOM, ATOM
     id::Int32                                       #2  Atom index
@@ -59,6 +35,7 @@ struct Atoma
     Cartn_z_esd::Union{Float32, Nothing}
     occupancy_esd::Union{Float32, Nothing}
     B_iso_or_equiv_esd::Union{Float32, Nothing}
+    pdbx_tls_group_id::Union{Int16, Nothing}
     parents::Dict{Type, Ref{}}                      # links to struct hierarhy elements
     function Atoma(ar::NamedTuple)
         latom_id = ar.label_atom_id  in ("?", ".") ? Symbol(ar.auth_atom_id) : Symbol(ar.label_atom_id)
@@ -75,6 +52,7 @@ struct Atoma
         Cartn_z_esd = :Cartn_z_esd in keys(ar) ? tryparse(Float32, ar.Cartn_z_esd) : nothing
         occupancy_esd = :occupancy_esd in keys(ar) ? tryparse(Float32, ar.occupancy_esd) : nothing
         B_iso_or_equiv_esd = :B_iso_or_equiv_esd in keys(ar) ? tryparse(Float32, ar.B_iso_or_equiv_esd) : nothing
+        pdbx_tls_group_id = :pdbx_tls_group_id  in keys(ar) ? tryparse(Int16, ar.pdbx_tls_group_id) : nothing
         new(Symbol(ar.group_PDB), 
             parse(Int32, ar.id), 
             Symbol(ar.type_symbol), 
@@ -102,6 +80,7 @@ struct Atoma
             Cartn_z_esd,
             occupancy_esd,
             B_iso_or_equiv_esd,
+            pdbx_tls_group_id,
             Dict{Type, Ref{}}())
     end
 end

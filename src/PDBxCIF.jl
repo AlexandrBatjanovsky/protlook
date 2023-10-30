@@ -7,9 +7,9 @@ import TranscodingStreams: TranscodingStream as tcstream
 import CodecZlib: GzipDecompressor as uzip
 
 using Logging
-log_io = open("logfile.txt", "w")
-debug_logger = ConsoleLogger(log_io, Logging.Debug)
-#global_logger(debug_logger)
+log_io = open(joinpath(settings[:DirOrg][:lgDir], "cif_log.txt"), "w+")
+warn_logger = SimpleLogger(log_io)
+#global_logger(warn_logger)
 
 include("molmod/atom.jl")
 
@@ -106,28 +106,40 @@ function readCIF(PDBId::AbstractString, fname::AbstractString, cifflag::Bool, zi
                         Vector{String}(cifsplitline[2:end])
                     push!(cur_loop_atributes, Symbol(split(cifsplitline[1], ".")[2]))
                 else
-                    @warn "In $(fname) categori $(split(cifsplitline[1], ".")[1]) attribute\
-                        $(split(cifsplitline[1], ".")[2]) repeat"
+                    with_logger(warn_logger) do
+                        @warn "In $(fname) categori $(split(cifsplitline[1], ".")[1]) attribute \
+                            $(split(cifsplitline[1], ".")[2]) repeat"
+                    end
                     append!(cur_loop_categories[Symbol(split(cifsplitline[1], ".")[1])][
                                                 Symbol(split(cifsplitline[1], ".")[2])],
                             Vector{String}(cifsplitline[2:end]))
                 end
             else
-                @warn "Loop category format not parsed $(cifline)"
+                with_logger(warn_logger) do
+                    @warn "Loop category format not parsed $(cifline)" 
+                end
             end
         elseif cifsplitline[1] == "ATOM" || cifsplitline[1] == "HETATM"
             if flag_atom && !haskey(cur_loop_categories, :_atom_site)
-                @warn "In $(fname) atom record with $(keys(cur_loop_categories)) categories. Text: \" $(cifline)\""
+                with_logger(warn_logger) do
+                    @warn "In $(fname) atom record with $(keys(cur_loop_categories)) categories. Text: \" $(cifline)\""
+                end
             else
                 global flag_atom = false
                 if flag_cate && !isempty(setdiff(cur_loop_atributes, fieldnames(Atoma)))
-                    @warn "In $(fname) Conflict names :_atom_site and Atoma: $(cur_loop_atributes))\
-                    $(fieldnames(Atoma)[1:length(fieldnames(Atoma))-1])"
+                    with_logger(warn_logger) do
+                        @warn "In $(fname) Conflict names :_atom_site and Atoma: $(cur_loop_atributes))\
+                            $(fieldnames(Atoma)[1:length(fieldnames(Atoma))-1])"
+                    end
                     return missing
                 end
                 global flag_cate = false
                 if numloop ∉ atomicloop
-                    if length(atomicloop) > 0 @warn "In $(fname) atom records in different loops" end
+                    if length(atomicloop) > 0 
+                        with_logger(warn_logger) do 
+                            @warn "In $(fname) atom records in different loops" 
+                        end
+                    end
                     push!(atomicloop, numloop)
                 end
                 push!(atomica, Atoma(NamedTuple{Tuple(cur_loop_atributes)}(cifsplitline)))

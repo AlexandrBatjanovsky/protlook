@@ -24,7 +24,7 @@ using JSON3
 if !isfile(joinpath(projectDir, "settings.json"))
 	println("Create zero settings")
 	settings = Dict(:DatLst=>
-					    normpath(joinpath(projectDir, dataDir, "outfile.csv")),    #PDBSelector_f3b70
+					    normpath(joinpath(projectDir, dataDir, "PDBSelector.csv")),    #PDBSelector_f3b70
 					:CmpLib=>
 						normpath(joinpath(projectDir, dataDir, "components.cif")),
 					:CmpInd=>

@@ -1,12 +1,12 @@
 {
-    "CmpLib": "D:\\work\\protlook\\wdata\\components.cif",
+    "CmpLib": "/home/alexandersn/Work/Proteins/protlook/wdata/components.cif",
     "DirOrg": {
-        "dsDir": "D:\\work\\protlook\\wdata\\structs",
-        "prDir": "D:\\work\\protlook",
-        "scDir": "D:\\work\\protlook\\src",
-        "wdDir": "D:\\work\\protlook\\wdata",
-        "lgDir": "D:\\work\\protlook\\wdata\\logs"
+        "dsDir": "/home/alexandersn/Work/Proteins/protlook/wdata/structs",
+        "prDir": "/home/alexandersn/Work/Proteins/protlook",
+        "scDir": "/home/alexandersn/Work/Proteins/protlook/src",
+        "wdDir": "/home/alexandersn/Work/Proteins/protlook/wdata",
+        "lgDir": "/home/alexandersn/Work/Proteins/protlook/wdata/logs"
     },
-    "CmpInd": "D:\\work\\protlook\\wdata\\components.cif.ind",
-    "DatLst": "D:\\work\\protlook\\wdata\\outfile.csv"
+    "CmpInd": "/home/alexandersn/Work/Proteins/protlook/wdata/components.cif.ind",
+    "DatLst": "/home/alexandersn/Work/Proteins/protlook/wdata/PDBSelector.csv"
 }
