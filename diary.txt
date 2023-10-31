@@ -14,3 +14,5 @@ PDBxCIF_DataFrame.jl - version PDBxCIF.jl with atomic ctructure based on DataFra
 atom.jl - rewrite(Atoma change to closer cifdata, add constructor for parsing and check failed fields)
 19.10.2032
 PDBxCIF.jl - add constructMolecular function
+20-32.10.2023
+create compound; add stereo; read index compound; rewrite atoma(add atributes from all pdb); @warn to @debug

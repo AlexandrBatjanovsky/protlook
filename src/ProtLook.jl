@@ -61,7 +61,7 @@ if !isfile(settings[:CmpLib])
 	println("done.")
 end
 
-using JLD
+using JLD2
 if !isfile(settings[:CmpInd])
  	@info "Create compounds indexing file $(settings[:CmpLib]*".ind")"
 	print("Create compounds indexing file. Wait...")
@@ -73,8 +73,8 @@ if !isfile(settings[:CmpInd])
 			dictofcompounds[Symbol(rline[6:8])] = position(PDBlibfile) 
 		end
 	end
-	jldopen(settings[:CmpInd], "w") do indPDBlibfile
-		write(indPDBlibfile, "CompoundsDict", dictofcompounds) end
+	jldopen(settings[:CmpInd], "w"; compress = true) do indPDBlibfile
+		indPDBlibfile["compoundoffset"] = dictofcompounds end
 	println("done.")
 end
 

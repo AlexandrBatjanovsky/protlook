@@ -8,5 +8,5 @@
         "lgDir": "/home/alexandersn/Work/Proteins/protlook/wdata/logs"
     },
     "CmpInd": "/home/alexandersn/Work/Proteins/protlook/wdata/components.cif.ind",
-    "DatLst": "/home/alexandersn/Work/Proteins/protlook/wdata/PDBSelector.csv"
+    "DatLst": "/home/alexandersn/Work/Proteins/protlook/wdata/outfile.csv"
 }

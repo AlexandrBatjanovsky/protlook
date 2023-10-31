@@ -1,6 +1,9 @@
 module PDBxCIF
 
+export downloadCif, readCIF, constructMolecula
+
 using ..Datas: settings
+using ..Datas: Atoma, StructModel, AtomsGroup, PDBsChain
 
 using Downloads
 import TranscodingStreams: TranscodingStream as tcstream
@@ -10,8 +13,6 @@ using Logging
 log_io = open(joinpath(settings[:DirOrg][:lgDir], "cif_log.txt"), "w+")
 warn_logger = SimpleLogger(log_io)
 #global_logger(warn_logger)
-
-include("molmod/atom.jl")
 
 """
 # 
@@ -107,7 +108,7 @@ function readCIF(PDBId::AbstractString, fname::AbstractString, cifflag::Bool, zi
                     push!(cur_loop_atributes, Symbol(split(cifsplitline[1], ".")[2]))
                 else
                     with_logger(warn_logger) do
-                        @warn "In $(fname) categori $(split(cifsplitline[1], ".")[1]) attribute \
+                        @debug "In $(fname) categori $(split(cifsplitline[1], ".")[1]) attribute \
                             $(split(cifsplitline[1], ".")[2]) repeat"
                     end
                     append!(cur_loop_categories[Symbol(split(cifsplitline[1], ".")[1])][
@@ -122,7 +123,7 @@ function readCIF(PDBId::AbstractString, fname::AbstractString, cifflag::Bool, zi
         elseif cifsplitline[1] == "ATOM" || cifsplitline[1] == "HETATM"
             if flag_atom && !haskey(cur_loop_categories, :_atom_site)
                 with_logger(warn_logger) do
-                    @warn "In $(fname) atom record with $(keys(cur_loop_categories)) categories. Text: \" $(cifline)\""
+                    @debug "In $(fname) atom record with $(keys(cur_loop_categories)) categories. Text: \" $(cifline)\""
                 end
             else
                 global flag_atom = false
@@ -180,7 +181,8 @@ function constructMolecula(atomiccontent::Vector{Atoma})
         global modelsdict, chainsdict, composdict
         if ckmodel != ckAtomi.pdbx_PDB_model_num
             if haskey(modelsdict, ckAtomi.pdbx_PDB_model_num)
-                @warn "Model introduction $(ckAtomi.pdbx_PDB_model_num) in $(ckmodel)"
+                with_logger(warn_logger) do
+                    @warn "Model introduction $(ckAtomi.pdbx_PDB_model_num) in $(ckmodel)" end
             else
                 global modelsdict
                 modelsdict[ckAtomi.pdbx_PDB_model_num] = StructModel(ckAtomi.pdbx_PDB_model_num,
@@ -193,7 +195,9 @@ function constructMolecula(atomiccontent::Vector{Atoma})
         if ckchain != (ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id)
             if haskey(chainsdict, (ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id))
                 if ckAtomi.group_PDB != :HETATM
-                    @warn "Chain introduction $((ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id)) in $(ckchain)" end
+                    with_logger(warn_logger) do
+                        @warn "Chain introduction $((ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id)) in $(ckchain)"
+                    end end
             else 
                 global chainsdict
                 chainsdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id)]=PDBsChain(
@@ -208,9 +212,10 @@ function constructMolecula(atomiccontent::Vector{Atoma})
 
         if ckcompd != (ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id, ckAtomi.label_seq_id)
             if haskey(composdict, (ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id, ckAtomi.label_seq_id))
-                print(ckAtomi)
-                @warn "Compound introduction $((ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id, ckAtomi.label_seq_id))\
-                             in $(ckcompd) "
+                with_logger(warn_logger) do
+                    @warn "Compound introduction $((ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id, ckAtomi.label_seq_id)) \
+                        in $(ckcompd) "
+                end
             else
                 global composdict 
                 composdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id, ckAtomi.label_seq_id)] =
@@ -233,12 +238,11 @@ function constructMolecula(atomiccontent::Vector{Atoma})
         push!(chainsdict[ckchain].childs[Atoma], Ref(ckAtomi))
         push!(modelsdict[ckmodel].childs[Atoma], Ref(ckAtomi))
         
-        with_logger(debug_logger) do
+        with_logger(warn_logger) do
             if length(ckAtomi.parents)!=0 
-                @debug begin
-                    println("Error atom parrent recode", ckAtomi)
-                    error("atom parrent recode")
-                end
+                with_logger(warn_logger) do 
+                    @warn "Error atom parrent recode, $(ckAtomi)" end
+                error("atom parrent recode")
             end
         end 
 

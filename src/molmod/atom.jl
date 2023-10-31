@@ -1,9 +1,9 @@
-# module AtomI
-
 export Atoma
 export StructModel
 export AtomsGroup
 export PDBsChain
+
+export  Atomc, Bondc
 
 using StaticArrays: SVector
 
@@ -23,19 +23,20 @@ struct Atoma
     Cartn_z::Float32                                #13
     occupancy::Float32                              #14 Part position detection
     B_iso_or_equiv::Float32                         #15 B-factor
-    pdbx_formal_charge::Union{Float32, Nothing}     #16 Formal pdb charge
+    pdbx_formal_charge::Union{Float32, Missing}     #16 Formal pdb charge
     auth_seq_id::Int32                              #17 Compound(atomic group) index (label_seq_id)
     auth_comp_id::Symbol                            #18 Compound(atomic group)(label_comp_id)
     auth_asym_id::Symbol                            #19 Chain Id (label_asym_id)
     auth_atom_id::Symbol                            #20 Type Atom in compound(label_atom_id)
     pdbx_PDB_model_num::Int32                       #21 Model Index
-    calc_flag::Union{Int16, Nothing}                 # calc or intense 
+    calc_flag::Union{Int16, Nothing}                # calc or intense 
     Cartn_x_esd::Union{Float32, Nothing}
     Cartn_y_esd::Union{Float32, Nothing}
     Cartn_z_esd::Union{Float32, Nothing}
     occupancy_esd::Union{Float32, Nothing}
     B_iso_or_equiv_esd::Union{Float32, Nothing}
     pdbx_tls_group_id::Union{Int16, Nothing}
+    pdbx_auth_alt_id::Union{Symbol, Nothing}
     parents::Dict{Type, Ref{}}                      # links to struct hierarhy elements
     function Atoma(ar::NamedTuple)
         latom_id = ar.label_atom_id  in ("?", ".") ? Symbol(ar.auth_atom_id) : Symbol(ar.label_atom_id)
@@ -46,13 +47,16 @@ struct Atoma
         aasym_id = ar.auth_asym_id in ("?", ".") ? Symbol(ar.label_asym_id) : Symbol(ar.auth_asym_id)
         lseq_id  = ar.label_seq_id  in ("?", ".") ? parse(Int32, ar.auth_seq_id) : parse(Int32, ar.label_seq_id)
         aseq_id  = ar.auth_seq_id in ("?", ".") ? parse(Int32, ar.label_seq_id) : parse(Int32, ar.auth_seq_id)
+        pdbx_formal_charge = tryparse(Float32, ar.pdbx_formal_charge)
+        !isnothing(pdbx_formal_charge) || (pdbx_formal_charge = missing)
         calc_flag = :calc_flag in keys(ar) ? tryparse(Int16, ar.calc_flag) : nothing
         Cartn_x_esd = :Cartn_x_esd in keys(ar) ? tryparse(Float32, ar.Cartn_x_esd) : nothing
         Cartn_y_esd = :Cartn_y_esd in keys(ar) ? tryparse(Float32, ar.Cartn_y_esd) : nothing
         Cartn_z_esd = :Cartn_z_esd in keys(ar) ? tryparse(Float32, ar.Cartn_z_esd) : nothing
         occupancy_esd = :occupancy_esd in keys(ar) ? tryparse(Float32, ar.occupancy_esd) : nothing
         B_iso_or_equiv_esd = :B_iso_or_equiv_esd in keys(ar) ? tryparse(Float32, ar.B_iso_or_equiv_esd) : nothing
-        pdbx_tls_group_id = :pdbx_tls_group_id  in keys(ar) ? tryparse(Int16, ar.pdbx_tls_group_id) : nothing
+        pdbx_tls_group_id = :pdbx_tls_group_id in keys(ar) ? tryparse(Int16, ar.pdbx_tls_group_id) : nothing
+        pdbx_auth_alt_id = :pdbx_auth_alt_id in keys(ar) ? Symbol(ar.pdbx_auth_alt_id) : nothing
         new(Symbol(ar.group_PDB), 
             parse(Int32, ar.id), 
             Symbol(ar.type_symbol), 
@@ -68,7 +72,7 @@ struct Atoma
             parse(Float32, ar.Cartn_z),
             parse(Float32, ar.occupancy),
             parse(Float32, ar.B_iso_or_equiv),
-            tryparse(Float32, ar.pdbx_formal_charge),
+            pdbx_formal_charge,
             aseq_id,
             acomp_id,
             aasym_id,
@@ -81,6 +85,7 @@ struct Atoma
             occupancy_esd,
             B_iso_or_equiv_esd,
             pdbx_tls_group_id,
+            pdbx_auth_alt_id,
             Dict{Type, Ref{}}())
     end
 end
