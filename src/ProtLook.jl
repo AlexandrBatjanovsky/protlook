@@ -1,6 +1,6 @@
 """
-module PDBCIF_File  defines loading and reading
-CIF and PDB format modeles.
+module Protlook. Global. Defines and load settings and nonconstant files
+runing all athers.
 """
 module ProtLook
 
@@ -24,11 +24,11 @@ using JSON3
 if !isfile(joinpath(projectDir, "settings.json"))
 	println("Create zero settings")
 	settings = Dict(:DatLst=>
-					    normpath(joinpath(projectDir, dataDir, "PDBSelector.csv")),    #PDBSelector_f3b70
+					    normpath(joinpath(projectDir, dataDir, "outfile.csv")),    #PDBSelector_f3b70
 					:CmpLib=>
 						normpath(joinpath(projectDir, dataDir, "components.cif")),
 					:CmpInd=>
-						normpath(joinpath(projectDir, dataDir, "components.cif.ind")),
+						normpath(joinpath(projectDir, dataDir, "components.cif.jld2")),
 					:DirOrg=> Dict(:prDir=>projectDir,
 								   :scDir=>joinpath(projectDir, srcDir),
 								   :wdDir=>joinpath(projectDir, dataDir),
@@ -61,6 +61,7 @@ if !isfile(settings[:CmpLib])
 	println("done.")
 end
 
+# create seek(read) indexes of compouds in Chemical Component Dictionary and save dict of its to JLD2
 using JLD2
 if !isfile(settings[:CmpInd])
  	@info "Create compounds indexing file $(settings[:CmpLib]*".ind")"
@@ -68,9 +69,8 @@ if !isfile(settings[:CmpInd])
 	dictofcompounds = Dict{Symbol, Int64}()
 	PDBlibfile = open(settings[:CmpLib], "r") 
 	for rline in eachline(PDBlibfile)
-		#println(rline, "!!", uf)
-		if length(rline)>=8 && rline[1:5] == "data_"
-			dictofcompounds[Symbol(rline[6:8])] = position(PDBlibfile) 
+		if length(rline)>=5 && rline[1:5] == "data_"
+			dictofcompounds[Symbol(strip(rline[6:end], [' ', '\n']))] = position(PDBlibfile) 
 		end
 	end
 	jldopen(settings[:CmpInd], "w"; compress = true) do indPDBlibfile

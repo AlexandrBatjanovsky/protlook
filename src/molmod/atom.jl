@@ -128,7 +128,7 @@ struct Atomc
     pdbx_component_atom_id::Symbol
     pdbx_component_comp_id::Symbol
     pdbx_ordinal::Int16
-    # bonds::Dict{Symbol, Tuple{Bondc, Float32, Dict{Symbol, Float32}}}
+    bonds::Dict{Symbol, Tuple{Bondc, Float32, Dict{Symbol, Float32}}}
     function Atomc(ar::Vector{SubString{String}})
         new(Symbol(ar[1]),
             Symbol(ar[2]),
@@ -147,8 +147,8 @@ struct Atomc
             parse(Float32, ar[15]),
             Symbol(ar[16]),
             Symbol(ar[17]),
-            parse(Int16, ar[18]))
-            # Dict{Symbol, Tuple{Bondc, Float32, Dict{Symbol, Float32}}}())
+            parse(Int16, ar[18]),
+            Dict{Symbol, Tuple{Bondc, Float32, Dict{Symbol, Float32}}}())
     end
 end
 

@@ -24,30 +24,44 @@ function loadCompounds!(compoundnames::Set{Symbol})
         seek(compoundlibfile, compoundoffset[compoundname])
         rl = readline(compoundlibfile)
         categories = Dict{Symbol, Dict{Symbol, Vector{String}}}()
-        curcategory = :absence
+        global curcategory = :absence
         atomic = Dict{Symbol, Atomc}()
         coordc = Vector{SVector{3, Float32}}()
         compobonds = Dict{Symbol, Dict{Symbol, Bondc}}()
         while !occursin("data_", rl) && !eof(compoundlibfile)
-            if occursin("loop_", rl) curcategory = :absence end
+            global curcategory
+            #print(rl)
+            if occursin("loop_", rl) 
+                global curcategory
+                #println(curcategory)
+                curcategory = :absence 
+            end
             split_rl = split(rl)
-            if length(split_rl)>0 && split_rl[1] =="_"
+            if length(split_rl)>0 && split_rl[1][1] == '_'
+                global curcategory
                 categ, atrib = split(split_rl[1], '.')
-                if curcategory == :absence curcategory = Symbol(categ) end
+                if curcategory == :absence 
+                    global curcategory = Symbol(categ) 
+                    println("!!", curcategory)
+                end
                 if Symbol(categ) ∉ keys(categories) categories[Symbol(categ)] = Dict{Symbol, String}() end
-                categories[Symbol(categ)][Symbol(atrib)] = length(split_rl) > 1 ? split_rl[2:end] : []
+                categories[Symbol(categ)][Symbol(atrib)] = length(split_rl) > 2 ? split_rl[2:end] : []
             end
             if length(split_rl)>1 && split_rl[1] == String(compoundname)
+                #println("atom", rl)
+                global curcategory
                 if curcategory == :_chem_comp_atom
+                    println("atom", rl)
                     atomic[Symbol(split_rl[end - 2])] = Atomc(split_rl)
                     push!(coordc, [atomic[Symbol(split_rl[end - 2])].model_Cartn_x,
                                 atomic[Symbol(split_rl[end - 2])].model_Cartn_y,
                                 atomic[Symbol(split_rl[end - 2])].model_Cartn_z])
                 elseif curcategory == :_chem_comp_bond
+                    println("bond", rl)
                     at1 = Symbol(split_rl[2]); at2 = Symbol(split_rl[3])
                     if at1 ∉ keys(compobonds) compobonds[at1] = Dict{Symbol, Bondc}() end
                     if at2 ∉ keys(compobonds) compobonds[at2] = Dict{Symbol, Bondc}() end
-                    compobonds[at1][at2] = compobonds[at2][at1] = Bonds(split_rl)
+                    compobonds[at1][at2] = compobonds[at2][at1] = Bondc(split_rl)
                 end
             end
             rl = readline(compoundlibfile)
@@ -68,7 +82,10 @@ function loadCompounds!(compoundnames::Set{Symbol})
             end
         end
         SetCompositions[compoundname] = (atomc = atomic, catec = categories)
+        #print(categories)
+        #println(compoundname)
     end
+    println(keys(SetCompositions))
 end
 
 function CmpAtomic(Compound::AtomsGroup, Hflag::Bool)
