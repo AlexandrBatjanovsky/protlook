@@ -34,7 +34,7 @@ print(keys(settingproject))
 
 parentdir = pwd()
 for in walkdir(parentdir)
-
+   print("PROG DEPRICATED")
 end
 
 

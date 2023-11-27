@@ -16,3 +16,5 @@ atom.jl - rewrite(Atoma change to closer cifdata, add constructor for parsing an
 PDBxCIF.jl - add constructMolecular function
 20-32.10.2023
 create compound; add stereo; read index compound; rewrite atoma(add atributes from all pdb); @warn to @debug
+27.11.2023
+loadCompounds! dubugging

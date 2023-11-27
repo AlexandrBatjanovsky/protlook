@@ -29,20 +29,23 @@ ProtsData = Dict{Symbol, @NamedTuple{atomic::Vector{Atoma},
 for pdbr in eachrow(framePDB)
     if Symbol(pdbr[:PDBId]) ∉ keys(ProtsData)
         print(pdbr[:PDBId], " ")
-        atomica = PDBxCIF.readCIF(pdbr[:PDBId], joinpath(settings[:DirOrg][:dsDir], lowercase(pdbr[:FileName])), pdbr[:cif], pdbr[:gz])
+        atomica = PDBxCIF.readCIF(pdbr[:PDBId], joinpath(settings[:DirOrg][:dsDir], 
+                                                         lowercase(pdbr[:FileName])), pdbr[:cif], pdbr[:gz])
         if !ismissing(atomica) 
             print(size(atomica))
-            ProtsData[Symbol(pdbr[:PDBId])] = NamedTuple{(:atomic, :compic, :chanic, :struic)}((atomica, 
-                                                                                                PDBxCIF.constructMolecula(atomica)...))
+            ProtsData[Symbol(pdbr[:PDBId])] = NamedTuple{(:atomic, :compic, :chanic, :struic)}(
+                                                                      (atomica, PDBxCIF.constructMolecula(atomica)...))
             #o, a, u = PDBxCIF.constructMolecula(atomica)
             #ProtsData[Symbol(pdbr[:PDBId])] = Dict(:atomic=>atomica, :compic=>o, :chanic=>a, :struic=>u)
         end
     else print(pdbr[:PDBId], " present ") end
 end
-
+println()
+print("Compounds: ")
 #for pdib in keys(ProtsData)
 #    for compis in keys(ProtsData[pdib].compic)
-loadCompounds!(Set([ProtsData[pdib].compic[compis].compoundname for pdib in keys(ProtsData) for compis in keys(ProtsData[pdib].compic)]))
+loadCompounds!(Set([ProtsData[pdib].compic[compis].compoundname 
+                    for pdib in keys(ProtsData) for compis in keys(ProtsData[pdib].compic)]))
 
 #framePDB = CSV.read("utils/2", DataFrame; header=true)
 #for cifa in framePDB[!, :FileName]

@@ -119,12 +119,12 @@ struct Atomc
     pdbx_aromatic_flag::Bool
     pdbx_leaving_atom_flag::Bool
     pdbx_stereo_config::Bool
-    model_Cartn_x::Float32 
-    model_Cartn_y::Float32
-    model_Cartn_z::Float32
-    pdbx_model_Cartn_x_ideal::Float32
-    pdbx_model_Cartn_y_ideal::Float32
-    pdbx_model_Cartn_z_ideal::Float32
+    model_Cartn_x::Union{Float32, Nothing}
+    model_Cartn_y::Union{Float32, Nothing}
+    model_Cartn_z::Union{Float32, Nothing}
+    pdbx_model_Cartn_x_ideal::Union{Float32, Nothing}
+    pdbx_model_Cartn_y_ideal::Union{Float32, Nothing}
+    pdbx_model_Cartn_z_ideal::Union{Float32, Nothing}
     pdbx_component_atom_id::Symbol
     pdbx_component_comp_id::Symbol
     pdbx_ordinal::Int16
@@ -139,12 +139,12 @@ struct Atomc
             ar[7] == "Y",
             ar[8] == "Y",
             ar[9] == "Y",
-            parse(Float32, ar[10]),
-            parse(Float32, ar[11]),
-            parse(Float32, ar[12]),
-            parse(Float32, ar[13]),
-            parse(Float32, ar[14]),
-            parse(Float32, ar[15]),
+            tryparse(Float32, ar[10]),
+            tryparse(Float32, ar[11]),
+            tryparse(Float32, ar[12]),
+            tryparse(Float32, ar[13]),
+            tryparse(Float32, ar[14]),
+            tryparse(Float32, ar[15]),
             Symbol(ar[16]),
             Symbol(ar[17]),
             parse(Int16, ar[18]),
