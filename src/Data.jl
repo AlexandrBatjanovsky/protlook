@@ -10,7 +10,7 @@ export settings
 include("molmod/atom.jl")
 
 include("StereoChem.jl")
-import .StereoChem: loadCompounds!, CmpAtomic, CompositionConfirmation
+import .StereoChem: loadCompounds, CmpAtomic
 
 include("PDBxCIF.jl")
 import .PDBxCIF: readCIF, constructMolecula
@@ -41,10 +41,10 @@ for pdbr in eachrow(framePDB)
     else print(pdbr[:PDBId], " present ") end
 end
 println()
-print("Compounds: ")
+# print("Compounds: ")
 #for pdib in keys(ProtsData)
 #    for compis in keys(ProtsData[pdib].compic)
-loadCompounds!(Set([ProtsData[pdib].compic[compis].compoundname 
+loadCompounds(Set([ProtsData[pdib].compic[compis].compoundname 
                     for pdib in keys(ProtsData) for compis in keys(ProtsData[pdib].compic)]))
 
 #framePDB = CSV.read("utils/2", DataFrame; header=true)

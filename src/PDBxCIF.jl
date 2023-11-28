@@ -148,7 +148,6 @@ function readCIF(PDBId::AbstractString, fname::AbstractString, cifflag::Bool, zi
         end
     end
     return(atomica)
-
 end
 
 function constructMolecula(atomiccontent::Vector{Atoma})

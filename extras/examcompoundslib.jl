@@ -1,33 +1,26 @@
 # exploring Chemical Component Dictionary file
 
-LibCCD = Dict{AbstractString, Vector{Symbol}}()
+LibCCD = Dict{Symbol, Set{Symbol}}(:H=>Set())
 CCDfile = open("../wdata/components.cif", "r")
 
-atomtype = Set()
-
+curCategory = ""
+CCDline = ""
 for CCDline in eachline(CCDfile)
-    # println(CCDline)
+    #println(CCDline)
     global curCategory, curComosition
-    splitCCDLine = split(CCDline)
-    if occursin("data_", CCDline) curComosition = CCDline[6:end] end
-    if length(splitCCDLine) > 0 && occursin(".", splitCCDLine[1]) curCategory = split(splitCCDLine[1], ".")[1] end
-    if length(splitCCDLine) > 1
-        if splitCCDLine[1] == "_chem_comp.type" 
-            global curComosition
-            if join(splitCCDLine[2:end], " ") ∉ keys(LibCCD)
-                LibCCD[join(splitCCDLine[2:end], " ")] = [] end
-            push!(LibCCD[join(splitCCDLine[2:end], " ")], Symbol(curComosition))
+    if length(CCDline) > 1
+        if startswith(CCDline, "data_") 
+            curComosition = CCDline[6:end] end
+        if length(CCDline) > 0 && CCDline[1] == '_'
+            curCategory = split(CCDline, ".")[1] 
         end
-        if curComosition == splitCCDLine[1] && splitCCDLine[4] != "H" && curCategory == "_chem_comp_atom" 
-            push!(atomtype, splitCCDLine[2])
-            if splitCCDLine[2][1] == 'H' println(CCDline) end
+        if startswith(CCDline, curComosition) && curCategory == "_chem_comp_atom"
+            if length(split(CCDline))!=18 println(length(split(CCDline)), " ", CCDline)
+            elseif split(CCDline)[4] == "H"
+                push!(LibCCD[:H], Symbol(split(CCDline)[2]))
+            end
         end
     end
 end
 
-#for cotype in keys(LibCCD)
-#    println(cotype, " - ", length(LibCCD[cotype]), " : ", LibCCD[cotype]) 
-#    println()
-#end
-for Atype in atomtype
-    if Atype[1]=='H' print(":", Atype, ", ") end end
+println(LibCCD[:H])

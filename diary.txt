@@ -18,3 +18,5 @@ PDBxCIF.jl - add constructMolecular function
 create compound; add stereo; read index compound; rewrite atoma(add atributes from all pdb); @warn to @debug
 27.11.2023
 loadCompounds! dubugging
+28.11.2023
+loadCompounds dubugging
