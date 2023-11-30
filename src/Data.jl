@@ -25,7 +25,6 @@ ProtsData = Dict{Symbol, @NamedTuple{atomic::Vector{Atoma},
                                      compic::Dict{Tuple{Int32, Symbol, Int32}, AtomsGroup}, 
                                      chanic::Dict{Tuple{Int32, Symbol}, PDBsChain},
                                      struic::Dict{Int32, StructModel}}}()
-#ProtsData = Dict()
 for pdbr in eachrow(framePDB)
     if Symbol(pdbr[:PDBId]) ∉ keys(ProtsData)
         print(pdbr[:PDBId], " ")

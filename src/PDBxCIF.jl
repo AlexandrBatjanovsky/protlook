@@ -143,7 +143,13 @@ function readCIF(PDBId::AbstractString, fname::AbstractString, cifflag::Bool, zi
                     end
                     push!(atomicloop, numloop)
                 end
-                push!(atomica, Atoma(NamedTuple{Tuple(cur_loop_atributes)}(cifsplitline)))
+                if length(cifsplitline) != length(cur_loop_atributes)
+                    @warn "In $(fname) bad string split of atom record: $(cifline)" end
+                try
+                    push!(atomica, Atoma(NamedTuple{Tuple(cur_loop_atributes)}(cifsplitline)))
+                catch parserr
+                    @warn "In $(fname) bad parse of atom record: $(cifline)"
+                end
             end
         end
     end

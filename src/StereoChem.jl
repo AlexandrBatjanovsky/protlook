@@ -20,8 +20,8 @@ SetCompositions = Dict{Symbol, @NamedTuple{atomc::Dict{Symbol, Atomc},
     loadCompounds(CompoundNames)
 
 Selects from components.cif a set of elementary compounds included in the database under study (amino acid residues, heterocompounds)
-
 CompoundNames - Set of Symbols
+insert Compositions in SetCompositions(dict in module StereoChem)
 
 #Examples
 ```julia-repl
@@ -64,13 +64,16 @@ function loadCompounds(compoundnames::Set{Symbol})
                 global curcategory
                 if curcategory == :_chem_comp_atom
                     if length(split_rl) != 18 
-                        @error "Composition $(compoundname) is not parsing. \
+                        @warn "Composition $(compoundname) is not parsing. \
                                 Edit components.cif(may by in atomic record atom labeled strings with space \
                                 or some adding fields) \
-                                or remove pdb-structure with $(compoundname) from data"
-                        error("Composition is not parsing")
+                                and pdb-structure with $(compoundname) or remove this from data"
                     end                    
-                    atomic[Symbol(split_rl[2])] = Atomc(split_rl)
+                    try
+                        atomic[Symbol(split_rl[2])] = Atomc(split_rl)
+                    catch parseerr
+                        @warn "In Compound $(compoundname) bad parse of atom record: $(rl)"
+                    end
                     if !isnothing(atomic[Symbol(split_rl[2])].model_Cartn_x)
                         push!(coordcm, [atomic[Symbol(split_rl[2])].model_Cartn_x,
                                         atomic[Symbol(split_rl[2])].model_Cartn_y,
@@ -113,15 +116,33 @@ end
 
 function CmpAtomic(Compound::AtomsGroup, Hflag::Bool)
     removableatoms = Set([:HA, :OXT, :H])
+    absentatoms = Set{Symbol}()
     global SetCompositions
-    compound_atoms = Dict(ckAtom[].label_atom_id => SVector(ckAtom[].Cartn_x, ckAtom[].Cartn_y, ckAtom[].Cartn_z) 
-                                     for ckAtom in Compound.childs[Atoma] if ckAtom[].type_symbol != :H || Hflag)
-    if !isempty(setdiff(keys(compound_atoms), keys(SetCompositions[Compound.compoundname].atomic))) return false end
-    absentatoms = setdiff(keys(SetCompositions[Compound.compoundname].atomic), atomslabels)
-    if !Hflag
-        for arec in deepcopy(absentatoms)
-            if arec[1] == "H" delete!(absentatoms, arec) end end end
-    if !isempty(setdiff(absentatoms, removableatoms)) return false end
+    
+    ModlCompound = SetCompositions[Compound.compoundname].atomc
+    #TestCompound = Dict{Symbol, (Int16, SVector{3, Float32})}()
+    TestCompound = Dict{Symbol, SVector{3, Float32}}()
+    for aA in Compound.childs[TAtoma]
+        if aA[].type_symbol != :H || Hflag
+            TestCompound[aA[].label_atom_id] = (SVector(aA[].Cartn_x, aA[].Cartn_y, aA[].Cartn_z)) end            
+            #TestCompound[aA[].label_atom_id] = (ModlCompound[aA[].label_atom_id].pdbx_ordinal,
+            #                                    SVector(aA[].Cartn_x, aA[].Cartn_y, aA[].Cartn_z)) end
+    end
+    println("!@#", length(TestCompound))
+    #CompCoords = [oneCor[2] for oneCor in sort(values(TestCompound), by=x->x[1])]
+    for atomA in [aA for aA in keys(ModlCompound) if aA.type_symbol != :H || Hflag]
+        if atomA in keys(TestCompound)
+            pairwise(euclidean, [TestCompound[atomA],], 
+                                [TestCompound[atomB] for atomB in [aA for aA in keys(ModlCompound[atomA].bonds)
+                                                                      if aA in keys(TestCompound)]])
+            pairwise(cosine_dist, [TestCompound[atomB] for atomB in [aA for aA in keys(ModlCompound[atomA].bonds)
+                                                                        if aA in keys(TestCompound)]].- 
+                                  [TestCompound[atomA],])
+        else
+            push!(absentatoms, atomA)
+        end
+        
+    end
 end
 
 

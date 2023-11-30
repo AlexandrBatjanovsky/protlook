@@ -1,13 +1,10 @@
-export Atoma
-export StructModel
-export AtomsGroup
-export PDBsChain
+export TAtoma, TStructModel, TAtomsGroup, TPDBsChain
 
-export  Atomc, Bondc
+export  TAtomc, TBondc
 
-using StaticArrays: SVector
+#using StaticArrays: SVector
 
-struct Atoma
+struct TAtoma
     group_PDB::Symbol                               #1  HETATOM, ATOM
     id::Int32                                       #2  Atom index
     type_symbol::Symbol                             #3  Element
@@ -90,7 +87,7 @@ struct Atoma
     end
 end
 
-struct Bondc
+struct TBondc
     comp_id::Symbol
     atom_id_1::Symbol
     atom_id_2::Symbol
@@ -109,7 +106,7 @@ struct Bondc
     end
 end
 
-struct Atomc
+struct TAtomc
     comp_id::Symbol
     atom_id::Symbol
     alt_atom_id::Symbol
@@ -152,7 +149,7 @@ struct Atomc
     end
 end
 
-struct AtomsGroup
+struct TAtomsGroup
     id::Tuple{Int32, Symbol, Int32}
     compoundname::Symbol
     childs::Dict{Type, Vector{Ref{}}}
@@ -160,13 +157,13 @@ struct AtomsGroup
     #propertyes::Dict{AbstractString, AbstractString}
 end
 
-struct PDBsChain
+struct TPDBsChain
     id::Tuple{Int32, Symbol}
     childs::Dict{Type, Vector{Ref{}}}
     parent::Dict{Type, Ref{}}
 end
 
-struct StructModel
+struct TStructModel
     id::Int32
     childs::Dict{Type, Vector{Ref{}}}
 end
