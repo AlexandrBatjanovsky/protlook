@@ -3,7 +3,7 @@ module StereoChem
 
 export loadCompounds, CmpAtomic, CompositionConfirmation
 
-using ..Datas: settings
+using ..ProtLook: settings
 using ..Datas: Atoma, StructModel, AtomsGroup, PDBsChain
 using ..Datas: Atomc, Bondc
 
@@ -14,7 +14,8 @@ using JLD2
 using StaticArrays: SVector
 
 SetCompositions = Dict{Symbol, @NamedTuple{atomc::Dict{Symbol, Atomc},
-                                           catec::Dict{Symbol, Dict{Symbol, Vector{String}}}}}()
+                                           catec::Dict{Symbol, Dict{Symbol, Vector{String}}}
+                                           dists::(Matrix{Float32}, Array{Float32, 3})}}()
 
 """
     loadCompounds(CompoundNames)
@@ -75,14 +76,14 @@ function loadCompounds(compoundnames::Set{Symbol})
                         @warn "In Compound $(compoundname) bad parse of atom record: $(rl)"
                     end
                     if !isnothing(atomic[Symbol(split_rl[2])].model_Cartn_x)
-                        push!(coordcm, [atomic[Symbol(split_rl[2])].model_Cartn_x,
-                                        atomic[Symbol(split_rl[2])].model_Cartn_y,
-                                        atomic[Symbol(split_rl[2])].model_Cartn_z])
+                        push!(coordcm, SVector(atomic[Symbol(split_rl[2])].model_Cartn_x,
+                                               atomic[Symbol(split_rl[2])].model_Cartn_y,
+                                               atomic[Symbol(split_rl[2])].model_Cartn_z))
                     end
                     if !isnothing(atomic[Symbol(split_rl[2])].pdbx_model_Cartn_x_ideal)
-                        push!(coordci, [atomic[Symbol(split_rl[2])].pdbx_model_Cartn_x_ideal,
-                                        atomic[Symbol(split_rl[2])].pdbx_model_Cartn_y_ideal,
-                                        atomic[Symbol(split_rl[2])].pdbx_model_Cartn_z_ideal])
+                        push!(coordci, SVector(atomic[Symbol(split_rl[2])].pdbx_model_Cartn_x_ideal,
+                                               atomic[Symbol(split_rl[2])].pdbx_model_Cartn_y_ideal,
+                                               atomic[Symbol(split_rl[2])].pdbx_model_Cartn_z_ideal))
                     end
                 elseif curcategory == :_chem_comp_bond
                     at1 = Symbol(split_rl[2]); at2 = Symbol(split_rl[3])
@@ -96,21 +97,17 @@ function loadCompounds(compoundnames::Set{Symbol})
         # bonds analitic
         # not optimal - re-calculation of link lengths, but the algorithm is simpler
         for b_atom in keys(compobonds)
-            coordc = length(coordcm) > length(coordci) ? coordcm : coordci
-            dists = pairwise(euclidean, [coordc[atomic[b_atom].pdbx_ordinal],],
-                                         coordc[[atomic[cb_atom].pdbx_ordinal for cb_atom in keys(compobonds[b_atom])]])
-            angls = pairwise(cosine_dist, 
-                            coordc[[atomic[cb_atom].pdbx_ordinal for cb_atom in keys(compobonds[b_atom])]] 
-                                                    .- [coordc[atomic[b_atom].pdbx_ordinal]])
-            for (icb_atom, cb_atom) in enumerate(keys(compobonds[b_atom]))
-                atomic[b_atom].bonds[cb_atom] = (compobonds[b_atom][cb_atom], 
-                                                dists[icb_atom], 
-                                                Dict(ub_atom=>angls[icb_atom, iub_atom] 
-                                                    for (iub_atom, ub_atom) in enumerate(keys(compobonds[b_atom]))))
-            end
+            for cb_atom in keys(compobonds[b_atom])
+                atomic[b_atom].bonds[cb_atom] = compobonds[b_atom][cb_atom] end
         end
+        coordc = length(coordcm) > length(coordci) ? coordcm : coordci
+        @debug begin 
+            if length(coordc) != length(atomic) "Different num coords and atoms records in $(compoundname)" end
+        end
+        atomsdists = pairwise(euclidean, coordc)
+        bondangles = stack([pairwise(euclidean, coordc.-[coordc[i]]) for i in length(coordc)])
         # filling the target compounds set
-        SetCompositions[compoundname] = (atomc = atomic, catec = categories)
+        SetCompositions[compoundname] = (atomc = atomic, catec = categories, dists = (atomsdists, bondangles))
     end
 end
 
@@ -120,28 +117,26 @@ function CmpAtomic(Compound::AtomsGroup, Hflag::Bool)
     global SetCompositions
     
     ModlCompound = SetCompositions[Compound.compoundname].atomc
-    #TestCompound = Dict{Symbol, (Int16, SVector{3, Float32})}()
-    TestCompound = Dict{Symbol, SVector{3, Float32}}()
+    ModlDistance = SetCompositions[Compound.compoundname].dists
+    TestCompound = Dict{Symbol, (Int16, SVector{3, Float32})}()
+    #TestCompound = Dict{Symbol, SVector{3, Float32}}()
     for aA in Compound.childs[TAtoma]
         if aA[].type_symbol != :H || Hflag
-            TestCompound[aA[].label_atom_id] = (SVector(aA[].Cartn_x, aA[].Cartn_y, aA[].Cartn_z)) end            
-            #TestCompound[aA[].label_atom_id] = (ModlCompound[aA[].label_atom_id].pdbx_ordinal,
-            #                                    SVector(aA[].Cartn_x, aA[].Cartn_y, aA[].Cartn_z)) end
+            #TestCompound[aA[].label_atom_id] = (SVector(aA[].Cartn_x, aA[].Cartn_y, aA[].Cartn_z)) end
+            TestCompound[aA[].label_atom_id] = (ModlCompound[aA[].label_atom_id].pdbx_ordinal,
+                                                SVector(aA[].Cartn_x, aA[].Cartn_y, aA[].Cartn_z)) end
     end
-    println("!@#", length(TestCompound))
-    #CompCoords = [oneCor[2] for oneCor in sort(values(TestCompound), by=x->x[1])]
+    
     for atomA in [aA for aA in keys(ModlCompound) if aA.type_symbol != :H || Hflag]
         if atomA in keys(TestCompound)
-            pairwise(euclidean, [TestCompound[atomA],], 
-                                [TestCompound[atomB] for atomB in [aA for aA in keys(ModlCompound[atomA].bonds)
-                                                                      if aA in keys(TestCompound)]])
-            pairwise(cosine_dist, [TestCompound[atomB] for atomB in [aA for aA in keys(ModlCompound[atomA].bonds)
-                                                                        if aA in keys(TestCompound)]].- 
-                                  [TestCompound[atomA],])
+            [ModlDistance[ModlCompound[atomA].pdbx_ordinal, ModlCompound[atomB].pdbx_ordinal], 
+                for atomB in keys(ModlCompound[atomA].bonds) if atomB in keys(TestCompound)]
+            -pairwise(euclidean, [TestCompound[atomA],], 
+                                 [TestCompound[atomB] for atomB in keys(ModlCompound[atomA].bonds)
+                                                      if  atomB in keys(TestCompound)])
         else
             push!(absentatoms, atomA)
-        end
-        
+        end        
     end
 end
 

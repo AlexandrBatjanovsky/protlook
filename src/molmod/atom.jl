@@ -145,7 +145,7 @@ struct TAtomc
             Symbol(ar[16]),
             Symbol(ar[17]),
             parse(Int16, ar[18]),
-            Dict{Symbol, Tuple{Bondc, Float32, Dict{Symbol, Float32}}}())
+            Dict{Symbol, Bondc}())
     end
 end
 
