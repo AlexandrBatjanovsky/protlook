@@ -31,7 +31,7 @@ struct TAtoma
     Cartn_y_esd::Union{Float32, Nothing}
     Cartn_z_esd::Union{Float32, Nothing}
     occupancy_esd::Union{Float32, Nothing}
-    B_iso_or_equiv_esd::Union{Float32, Nothing}
+    B_iso_or_equiv_esd::Union{Float32, Nothing, Missing}
     pdbx_tls_group_id::Union{Int16, Nothing}
     pdbx_auth_alt_id::Union{Symbol, Nothing}
     parents::Dict{Type, Ref{}}                      # links to struct hierarhy elements

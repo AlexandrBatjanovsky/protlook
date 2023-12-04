@@ -126,14 +126,14 @@ function CmpAtomic(Compound::AtomsGroup, Hflag::Bool)
             TestCompound[aA[].label_atom_id] = (ModlCompound[aA[].label_atom_id].pdbx_ordinal,
                                                 SVector(aA[].Cartn_x, aA[].Cartn_y, aA[].Cartn_z)) end
     end
-    
     for atomA in [aA for aA in keys(ModlCompound) if aA.type_symbol != :H || Hflag]
         if atomA in keys(TestCompound)
-            [ModlDistance[ModlCompound[atomA].pdbx_ordinal, ModlCompound[atomB].pdbx_ordinal], 
-                for atomB in keys(ModlCompound[atomA].bonds) if atomB in keys(TestCompound)]
-            -pairwise(euclidean, [TestCompound[atomA],], 
-                                 [TestCompound[atomB] for atomB in keys(ModlCompound[atomA].bonds)
-                                                      if  atomB in keys(TestCompound)])
+            dist_ diference = [ModlDistance[ModlCompound[atomA].pdbx_ordinal, ModlCompound[atomB].pdbx_ordinal][1] 
+                                for atomB in keys(ModlCompound[atomA].bonds) if atomB in keys(TestCompound)]
+                             -pairwise(euclidean, [TestCompound[atomA][2],], 
+                                                  [TestCompound[atomB][2] for atomB in keys(ModlCompound[atomA].bonds)
+                                                                          if  atomB in keys(TestCompound)])
+
         else
             push!(absentatoms, atomA)
         end        
