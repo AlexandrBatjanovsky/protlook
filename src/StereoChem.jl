@@ -128,12 +128,11 @@ function CmpAtomic(Compound::AtomsGroup, Hflag::Bool)
     end
     for atomA in [aA for aA in keys(ModlCompound) if aA.type_symbol != :H || Hflag]
         if atomA in keys(TestCompound)
-            dist_ diference = [ModlDistance[ModlCompound[atomA].pdbx_ordinal, ModlCompound[atomB].pdbx_ordinal][1] 
-                                for atomB in keys(ModlCompound[atomA].bonds) if atomB in keys(TestCompound)]
-                             -pairwise(euclidean, [TestCompound[atomA][2],], 
-                                                  [TestCompound[atomB][2] for atomB in keys(ModlCompound[atomA].bonds)
-                                                                          if  atomB in keys(TestCompound)])
-
+            atomBs = [atomB for atomB in keys(ModlCompound[atomA].bonds) if atomB in keys(TestCompound)]
+            dist_diference[atomA] = [ModlDistance[ModlCompound[atomA].pdbx_ordinal, ModlCompound[atomB].pdbx_ordinal][1] 
+                                                for atomB in atomBs]
+                            -pairwise(euclidean, [TestCompound[atomA][2],], [TestCompound[atomB][2] for atomB in atomBs)
+            angl_diference[atomA]
         else
             push!(absentatoms, atomA)
         end        
