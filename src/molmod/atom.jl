@@ -1,10 +1,10 @@
-export TAtoma, TStructModel, TAtomsGroup, TPDBsChain
+export TAtom, TStructModel, TAtomsGroup, TPDBsChain
 
-export  TAtomc, TBondc
+export TAtomc, TBondc
 
-#using StaticArrays: SVector
+using StaticArrays: SVector
 
-struct TAtoma
+struct TAtom
     group_PDB::Symbol                               #1  HETATOM, ATOM
     id::Int32                                       #2  Atom index
     type_symbol::Symbol                             #3  Element
@@ -87,7 +87,26 @@ struct TAtoma
     end
 end
 
-struct TBondc
+struct TAtomsGroup
+    id::Tuple{Int32, Symbol, Int32}
+    compoundname::Symbol
+    childs::Dict{Type, Vector{Ref{}}}
+    parent::Dict{Type, Ref{}}
+    #propertyes::Dict{AbstractString, AbstractString}
+end
+
+struct TPDBsChain
+    id::Tuple{Int32, Symbol}
+    childs::Dict{Type, Vector{Ref{}}}
+    parent::Dict{Type, Ref{}}
+end
+
+struct TStructModel
+    id::Int32
+    childs::Dict{Type, Vector{Ref{}}}
+end
+
+struct TBondC
     comp_id::Symbol
     atom_id_1::Symbol
     atom_id_2::Symbol
@@ -106,7 +125,7 @@ struct TBondc
     end
 end
 
-struct TAtomc
+struct TAtomC
     comp_id::Symbol
     atom_id::Symbol
     alt_atom_id::Symbol
@@ -119,6 +138,7 @@ struct TAtomc
     model_Cartn_x::Union{Float32, Nothing}
     model_Cartn_y::Union{Float32, Nothing}
     model_Cartn_z::Union{Float32, Nothing}
+    model_Cartn::SVector{3, Union{Float32, Nothing}}
     pdbx_model_Cartn_x_ideal::Union{Float32, Nothing}
     pdbx_model_Cartn_y_ideal::Union{Float32, Nothing}
     pdbx_model_Cartn_z_ideal::Union{Float32, Nothing}
@@ -139,6 +159,9 @@ struct TAtomc
             tryparse(Float32, ar[10]),
             tryparse(Float32, ar[11]),
             tryparse(Float32, ar[12]),
+            SVector{3, Union{Float32, Nothing}}(tryparse(Float32, ar[10]),
+                                                tryparse(Float32, ar[11]),
+                                                tryparse(Float32, ar[12])),
             tryparse(Float32, ar[13]),
             tryparse(Float32, ar[14]),
             tryparse(Float32, ar[15]),
@@ -147,23 +170,4 @@ struct TAtomc
             parse(Int16, ar[18]),
             Dict{Symbol, Bondc}())
     end
-end
-
-struct TAtomsGroup
-    id::Tuple{Int32, Symbol, Int32}
-    compoundname::Symbol
-    childs::Dict{Type, Vector{Ref{}}}
-    parent::Dict{Type, Ref{}}
-    #propertyes::Dict{AbstractString, AbstractString}
-end
-
-struct TPDBsChain
-    id::Tuple{Int32, Symbol}
-    childs::Dict{Type, Vector{Ref{}}}
-    parent::Dict{Type, Ref{}}
-end
-
-struct TStructModel
-    id::Int32
-    childs::Dict{Type, Vector{Ref{}}}
 end

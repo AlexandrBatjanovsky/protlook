@@ -2,7 +2,7 @@
 
 using Pkg
 println("Temporary environment. Please don't worry about downloaded packages")
-Pkg.activate(; temp=true)
+Pkg.activate(; temp = true)
 Pkg.add(["DataFrames", "CSV", "DocOpt"])
 
 using DocOpt
@@ -39,19 +39,20 @@ end
 =#
 global pdblist = Vector{AbstractString}()
 if args["file"]
-	  open(args["<name>"], "r") do f
+    open(args["<name>"], "r") do f
         global pdblist
         if isnothing(args["--delim"])
-	          global pdblist = split(read(f, String)) 
+            global pdblist = split(read(f, String))
         else
-            global pdblist = split(read(f, String), args["--delim"])  
+            global pdblist = split(read(f, String), args["--delim"])
         end
     end
-    pdblist = [iad[parse(Int16, args["--fpID"]):parse(Int16, args["--spID"])] for iad in pdblist]
+    pdblist =
+        [iad[parse(Int16, args["--fpID"]):parse(Int16, args["--spID"])] for iad in pdblist]
     unique!(pdblist)
-    framePDB = DataFrame([[],[],[],[],[]], [:PDBId,:FileName,:gz,:cif,:Comment])
+    framePDB = DataFrame([[], [], [], [], []], [:PDBId, :FileName, :gz, :cif, :Comment])
     for pdbid in pdblist
-	      push!(framePDB, [pdbid, pdbid*".cif.gz", true, true, args["<name>"]])
+        push!(framePDB, [pdbid, pdbid * ".cif.gz", true, true, args["<name>"]])
     end
-    CSV.write(args["--outfile"]*".csv", framePDB)
-  end
+    CSV.write(args["--outfile"] * ".csv", framePDB)
+end

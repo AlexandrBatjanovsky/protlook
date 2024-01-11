@@ -4,8 +4,8 @@ module StereoChem
 export loadCompounds, CmpAtomic, CompositionConfirmation
 
 using ..ProtLook: settings
-using ..Datas: Atoma, StructModel, AtomsGroup, PDBsChain
-using ..Datas: Atomc, Bondc
+using ..Datas: TAtom, TStructModel, TAtomsGroup, TPDBsChain
+using ..Datas: TAtomC, TBondC
 
 using Distances
 
@@ -13,7 +13,7 @@ using Logging
 using JLD2
 using StaticArrays: SVector
 
-SetCompositions = Dict{Symbol, @NamedTuple{atomc::Dict{Symbol, Atomc},
+SetCompositions = Dict{Symbol, @NamedTuple{atomc::Dict{Symbol, TAtomc},
                                            catec::Dict{Symbol, Dict{Symbol, Vector{String}}}
                                            dists::(Matrix{Float32}, Array{Float32, 3})}}()
 
@@ -40,19 +40,18 @@ function loadCompounds(compoundnames::Set{Symbol})
         rl = readline(compoundlibfile)
         categories = Dict{Symbol, Dict{Symbol, Vector{String}}}()
         global curcategory = :absence
-        atomic = Dict{Symbol, Atomc}()
+        atomic = Dict{Symbol, TAtomc}()
         # two set of coordinates in components.cif with ? in all
         coordcm = Vector{SVector{3, Float32}}(); coordci = Vector{SVector{3, Float32}}();
-        compobonds = Dict{Symbol, Dict{Symbol, Bondc}}()
+        compobonds = Dict{Symbol, Dict{Symbol, TBondc}}()
         while !occursin("data_", rl) && !eof(compoundlibfile)
             global curcategory
-            # if in cif string using " " (alt_atom_id record or ather ) change space to %% and delete " "
             if occursin("loop_", rl) 
                 global curcategory
                 curcategory = :absence 
             end
             split_rl = split(rl)
-            # categories and attributes reord
+            # categories and attributes record
             if length(split_rl)>0 && split_rl[1][1] == '_'
                 global curcategory
                 categ, atrib = split(split_rl[1], '.')
@@ -87,8 +86,8 @@ function loadCompounds(compoundnames::Set{Symbol})
                     end
                 elseif curcategory == :_chem_comp_bond
                     at1 = Symbol(split_rl[2]); at2 = Symbol(split_rl[3])
-                    if at1 ∉ keys(compobonds) compobonds[at1] = Dict{Symbol, Bondc}() end
-                    if at2 ∉ keys(compobonds) compobonds[at2] = Dict{Symbol, Bondc}() end
+                    if at1 ∉ keys(compobonds) compobonds[at1] = Dict{Symbol, TBondc}() end
+                    if at2 ∉ keys(compobonds) compobonds[at2] = Dict{Symbol, TBondc}() end
                     compobonds[at1][at2] = compobonds[at2][at1] = Bondc(split_rl)
                 end
             end
@@ -105,13 +104,13 @@ function loadCompounds(compoundnames::Set{Symbol})
             if length(coordc) != length(atomic) "Different num coords and atoms records in $(compoundname)" end
         end
         atomsdists = pairwise(euclidean, coordc)
-        bondangles = stack([pairwise(euclidean, coordc.-[coordc[i]]) for i in length(coordc)])
+        bondangles = stack([pairwise(cosine_dist, coordc.-[coordc[i]]) for i in length(coordc)])
         # filling the target compounds set
         SetCompositions[compoundname] = (atomc = atomic, catec = categories, dists = (atomsdists, bondangles))
     end
 end
 
-function CmpAtomic(Compound::AtomsGroup, Hflag::Bool)
+function CmpAtomic(Compound::AtomsGroup, Hatomflag::Bool, StericFlag::Bool)
     removableatoms = Set([:HA, :OXT, :H])
     absentatoms = Set{Symbol}()
     global SetCompositions
@@ -119,14 +118,19 @@ function CmpAtomic(Compound::AtomsGroup, Hflag::Bool)
     ModlCompound = SetCompositions[Compound.compoundname].atomc
     ModlDistance = SetCompositions[Compound.compoundname].dists
     TestCompound = Dict{Symbol, (Int16, SVector{3, Float32})}()
-    #TestCompound = Dict{Symbol, SVector{3, Float32}}()
-    for aA in Compound.childs[TAtoma]
-        if aA[].type_symbol != :H || Hflag
-            #TestCompound[aA[].label_atom_id] = (SVector(aA[].Cartn_x, aA[].Cartn_y, aA[].Cartn_z)) end
+    for aA in Compound.childs[TAtom]
+        if aA[].type_symbol != :H || Hatomflag
             TestCompound[aA[].label_atom_id] = (ModlCompound[aA[].label_atom_id].pdbx_ordinal,
                                                 SVector(aA[].Cartn_x, aA[].Cartn_y, aA[].Cartn_z)) end
     end
-    for atomA in [aA for aA in keys(ModlCompound) if aA.type_symbol != :H || Hflag]
+
+    function BondicAtoms(Atom::Symbol)
+        BondAtoms = Vector{Symbol}()
+        for bAtom in keys(ModlCompound[Atom].bonds)
+            if ModlCompound[Atom].bonds[bAtom]
+        end
+    end
+    for atomA in [aA for aA in keys(ModlCompound) if ModlCompound[aA].type_symbol != :H || Hatomflag]
         if atomA in keys(TestCompound)
             atomBs = [atomB for atomB in keys(ModlCompound[atomA].bonds) if atomB in keys(TestCompound)]
             dist_diference[atomA] = [ModlDistance[ModlCompound[atomA].pdbx_ordinal, ModlCompound[atomB].pdbx_ordinal][1] 
