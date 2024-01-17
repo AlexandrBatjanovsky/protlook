@@ -110,6 +110,16 @@ function loadCompounds(compoundnames::Set{Symbol})
     end
 end
 
+# for recursion in collectioning atoms with stable position 
+function StablePosAtoms!(Atom::Symbol, BondAtoms::Set{Symbol})
+    for bAtom in keys(ModlCompound[Atom].bonds)
+        push!(BondAtoms, bAtom)
+        if ModlCompound[Atom].bonds[bAtom].value_order != :SING || ModlCompound[Atom].bonds[bAtom].pdbx_aromatic_flag
+            BondicAtoms!(bAtom, BondAtoms)
+        end
+    end
+end
+
 function CmpAtomic(Compound::AtomsGroup, Hatomflag::Bool, StericFlag::Bool)
     removableatoms = Set([:HA, :OXT, :H])
     absentatoms = Set{Symbol}()
@@ -124,12 +134,6 @@ function CmpAtomic(Compound::AtomsGroup, Hatomflag::Bool, StericFlag::Bool)
                                                 SVector(aA[].Cartn_x, aA[].Cartn_y, aA[].Cartn_z)) end
     end
 
-    function BondicAtoms(Atom::Symbol)
-        BondAtoms = Vector{Symbol}()
-        for bAtom in keys(ModlCompound[Atom].bonds)
-            if ModlCompound[Atom].bonds[bAtom]
-        end
-    end
     for atomA in [aA for aA in keys(ModlCompound) if ModlCompound[aA].type_symbol != :H || Hatomflag]
         if atomA in keys(TestCompound)
             atomBs = [atomB for atomB in keys(ModlCompound[atomA].bonds) if atomB in keys(TestCompound)]
