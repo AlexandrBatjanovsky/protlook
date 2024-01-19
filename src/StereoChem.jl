@@ -7,7 +7,9 @@ using ..ProtLook: settings
 using ..Datas: TAtom, TStructModel, TAtomsGroup, TPDBsChain
 using ..Datas: TAtomC, TBondC
 
-using Distances
+import Distances:pairwice as dpairwice
+import Distances:euclidean
+import Distances:cosine_dist
 
 using Logging
 using JLD2
@@ -103,14 +105,22 @@ function loadCompounds(compoundnames::Set{Symbol})
         @debug begin 
             if length(coordc) != length(atomic) "Different num coords and atoms records in $(compoundname)" end
         end
-        atomsdists = pairwise(euclidean, coordc)
-        bondangles = stack([pairwise(cosine_dist, coordc.-[coordc[i]]) for i in length(coordc)])
+        atomsdists = dpairwise(euclidean, coordc)
+        bondangles = stack([dpairwise(cosine_dist, coordc.-[coordc[i]]) for i in 1:length(coordc)])
         # filling the target compounds set
         SetCompositions[compoundname] = (atomc = atomic, catec = categories, dists = (atomsdists, bondangles))
     end
 end
 
 # for recursion in collectioning atoms with stable position 
+function StablePosAtoms!(Atom::Symbol, BondAtoms::Set{Symbol})
+    for bAtom in keys(ModlCompound[Atom].bonds)
+        push!(BondAtoms, bAtom)
+        if ModlCompound[Atom].bonds[bAtom].value_order != :SING || ModlCompound[Atom].bonds[bAtom].pdbx_aromatic_flag
+            BondicAtoms!(bAtom, BondAtoms)
+        end
+    end
+end
 function StablePosAtoms!(Atom::Symbol, BondAtoms::Set{Symbol})
     for bAtom in keys(ModlCompound[Atom].bonds)
         push!(BondAtoms, bAtom)
@@ -139,7 +149,7 @@ function CmpAtomic(Compound::AtomsGroup, Hatomflag::Bool, StericFlag::Bool)
             atomBs = [atomB for atomB in keys(ModlCompound[atomA].bonds) if atomB in keys(TestCompound)]
             dist_diference[atomA] = [ModlDistance[ModlCompound[atomA].pdbx_ordinal, ModlCompound[atomB].pdbx_ordinal][1] 
                                                 for atomB in atomBs]
-                            -pairwise(euclidean, [TestCompound[atomA][2],], [TestCompound[atomB][2] for atomB in atomBs)
+                            -dpairwise(euclidean, [TestCompound[atomA][2],], [TestCompound[atomB][2] for atomB in atomBs)
             angl_diference[atomA]
         else
             push!(absentatoms, atomA)
