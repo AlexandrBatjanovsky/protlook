@@ -17,7 +17,7 @@ using StaticArrays: SVector
 
 SetCompositions = Dict{Symbol, @NamedTuple{atomc::Dict{Symbol, TAtomc},
                                            catec::Dict{Symbol, Dict{Symbol, Vector{String}}}
-                                           dists::(Matrix{Float32}, Array{Float32, 3})}}()
+                                           dists::(Matrix{Float32}, Array{Float32, 3})}()
 
 """
     loadCompounds(CompoundNames)
