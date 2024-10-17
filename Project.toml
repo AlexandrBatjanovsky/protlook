@@ -13,6 +13,13 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 TranscodingStreams = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
 
 [compat]
+CSV = "=0.10.14"
+CodecZlib = "=0.7.6"
+Distances = "=0.10.11"
+JLD2 = "=0.5.5"
+JSON3 = "=1.14.1"
+StaticArrays = "=1.9.7"
+TranscodingStreams = "=0.11.3"
 julia = "1.9"
 
 [extras]

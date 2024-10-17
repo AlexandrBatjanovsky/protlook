@@ -2,8 +2,8 @@ module PDBxCIF
 
 export downloadCif, readCIF, constructMolecula
 
-using ..Datas: settings
-using ..Datas: Atoma, StructModel, AtomsGroup, PDBsChain
+using ..Data: settings
+using ..Data: TAtom, TStructModel, TAtomsGroup, TPDBsChain
 
 using Downloads
 import TranscodingStreams: TranscodingStream as tcstream
@@ -88,9 +88,9 @@ function readCIF(PDBId::AbstractString, fname::AbstractString, cifflag::Bool, zi
     cur_loop_atributes = Vector{Symbol}()
     # возвращаемый список всех атомных записей в виде кортежа именнованного категориями
     # -текущего цикла
-    ##atomicdata = Vector{Atoma}
+    ##atomicdata = Vector{TAtom}
     # сэт номеров циклов содержащих атомные записи (теоретически должен содержать одно значение)
-    atomica = Vector{Atoma}()
+    atomica = Vector{TAtom}()
     atomicloop = Vector{Int16}()
     numloop = 1
     for cifline in eachline(cifstream)      # rewrite to catch read from cifstream
@@ -143,10 +143,10 @@ function readCIF(PDBId::AbstractString, fname::AbstractString, cifflag::Bool, zi
                 end
             else
                 global flag_atom = false
-                if flag_cate && !isempty(setdiff(cur_loop_atributes, fieldnames(Atoma)))
+                if flag_cate && !isempty(setdiff(cur_loop_atributes, fieldnames(TAtom)))
                     with_logger(warn_logger) do
-                        @warn "In $(fname) Conflict names :_atom_site and Atoma: $(cur_loop_atributes))\
-                            $(fieldnames(Atoma)[1:length(fieldnames(Atoma))-1])"
+                        @warn "In $(fname) Conflict names :_atom_site and TAtom: $(cur_loop_atributes))\
+                            $(fieldnames(TAtom)[1:length(fieldnames(TAtom))-1])"
                     end
                     return missing
                 end
@@ -165,7 +165,7 @@ function readCIF(PDBId::AbstractString, fname::AbstractString, cifflag::Bool, zi
                 try
                     push!(
                         atomica,
-                        Atoma(NamedTuple{Tuple(cur_loop_atributes)}(cifsplitline)),
+                        TAtom(NamedTuple{Tuple(cur_loop_atributes)}(cifsplitline)),
                     )
                 catch parserr
                     @warn "In $(fname) bad parse of atom record: $(cifline)"
@@ -176,44 +176,44 @@ function readCIF(PDBId::AbstractString, fname::AbstractString, cifflag::Bool, zi
     return (atomica)
 end
 
-function constructMolecula(atomiccontent::Vector{Atoma})
+function constructMolecula(atomiccontent::Vector{TAtom})
     global modelsdict, chainsdict, composdict
     ckmodel = atomiccontent[1].pdbx_PDB_model_num
-    modelsdict = Dict{Int32,StructModel}(
-        ckmodel => StructModel(
+    modelsdict = Dict{Int32,TStructModel}(
+        ckmodel => TStructModel(
             ckmodel,
             Dict(
-                Atoma => Vector{Ref{Atoma}}(),
-                AtomsGroup => Vector{Ref{AtomsGroup}}(),
-                PDBsChain => Vector{Ref{PDBsChain}}(),
+                TAtom => Vector{Ref{TAtom}}(),
+                TAtomsGroup => Vector{Ref{TAtomsGroup}}(),
+                TPDBsChain => Vector{Ref{TPDBsChain}}(),
             ),
         ),
     )
 
     ckchain = (ckmodel, atomiccontent[1].label_asym_id)
-    chainsdict = Dict{Tuple{Int32,Symbol},PDBsChain}(
-        ckchain => PDBsChain(
+    chainsdict = Dict{Tuple{Int32,Symbol},TPDBsChain}(
+        ckchain => TPDBsChain(
             ckchain,
-            Dict(Atoma => Vector{Ref{Atoma}}(), AtomsGroup => Vector{Ref{AtomsGroup}}()),
-            Dict(StructModel => Ref{StructModel}(modelsdict[ckmodel])),
+            Dict(TAtom => Vector{Ref{TAtom}}(), TAtomsGroup => Vector{Ref{TAtomsGroup}}()),
+            Dict(TStructModel => Ref{TStructModel}(modelsdict[ckmodel])),
         ),
     )
-    push!(modelsdict[ckmodel].childs[PDBsChain], Ref(chainsdict[ckchain]))
+    push!(modelsdict[ckmodel].childs[TPDBsChain], Ref(chainsdict[ckchain]))
 
     ckcompd = (ckmodel, atomiccontent[1].label_asym_id, atomiccontent[1].label_seq_id)
-    composdict = Dict{Tuple{Int32,Symbol,Int32},AtomsGroup}(
-        ckcompd => AtomsGroup(
+    composdict = Dict{Tuple{Int32,Symbol,Int32},TAtomsGroup}(
+        ckcompd => TAtomsGroup(
             ckcompd,
             atomiccontent[1].auth_comp_id,
-            Dict(Atoma => Vector{Ref{Atoma}}()),
+            Dict(TAtom => Vector{Ref{TAtom}}()),
             Dict(
-                PDBsChain => Ref{PDBsChain}(chainsdict[ckchain]),
-                StructModel => Ref{StructModel}(modelsdict[ckmodel]),
+                TPDBsChain => Ref{TPDBsChain}(chainsdict[ckchain]),
+                TStructModel => Ref{TStructModel}(modelsdict[ckmodel]),
             ),
         ),
     )
-    push!(modelsdict[ckmodel].childs[AtomsGroup], Ref(composdict[ckcompd]))
-    push!(chainsdict[ckchain].childs[AtomsGroup], Ref(composdict[ckcompd]))
+    push!(modelsdict[ckmodel].childs[TAtomsGroup], Ref(composdict[ckcompd]))
+    push!(chainsdict[ckchain].childs[TAtomsGroup], Ref(composdict[ckcompd]))
 
     for ckAtomi in atomiccontent
         global modelsdict, chainsdict, composdict
@@ -224,12 +224,12 @@ function constructMolecula(atomiccontent::Vector{Atoma})
                 end
             else
                 global modelsdict
-                modelsdict[ckAtomi.pdbx_PDB_model_num] = StructModel(
+                modelsdict[ckAtomi.pdbx_PDB_model_num] = TStructModel(
                     ckAtomi.pdbx_PDB_model_num,
                     Dict(
-                        Atoma => Vector{Ref{Atoma}}(),
-                        AtomsGroup => Vector{Ref{AtomsGroup}}(),
-                        PDBsChain => Vector{Ref{PDBsChain}}(),
+                        TAtom => Vector{Ref{TAtom}}(),
+                        TAtomsGroup => Vector{Ref{TAtomsGroup}}(),
+                        TPDBsChain => Vector{Ref{TPDBsChain}}(),
                     ),
                 )
             end
@@ -244,19 +244,19 @@ function constructMolecula(atomiccontent::Vector{Atoma})
                 end
             else
                 global chainsdict
-                chainsdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id)] = PDBsChain(
+                chainsdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id)] = TPDBsChain(
                     (ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id),
                     Dict(
-                        Atoma => Vector{Ref{Atoma}}(),
-                        AtomsGroup => Vector{Ref{AtomsGroup}}(),
+                        TAtom => Vector{Ref{TAtom}}(),
+                        TAtomsGroup => Vector{Ref{TAtomsGroup}}(),
                     ),
                     Dict(
-                        StructModel =>
-                            Ref{StructModel}(modelsdict[ckAtomi.pdbx_PDB_model_num]),
+                        TStructModel =>
+                            Ref{TStructModel}(modelsdict[ckAtomi.pdbx_PDB_model_num]),
                     ),
                 )
                 push!(
-                    modelsdict[ckAtomi.pdbx_PDB_model_num].childs[PDBsChain],
+                    modelsdict[ckAtomi.pdbx_PDB_model_num].childs[TPDBsChain],
                     Ref(chainsdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id)]),
                 )
             end
@@ -278,23 +278,23 @@ function constructMolecula(atomiccontent::Vector{Atoma})
                     ckAtomi.pdbx_PDB_model_num,
                     ckAtomi.label_asym_id,
                     ckAtomi.label_seq_id,
-                )] = AtomsGroup(
+                )] = TAtomsGroup(
                     (
                         ckAtomi.pdbx_PDB_model_num,
                         ckAtomi.label_asym_id,
                         ckAtomi.label_seq_id,
                     ),
                     ckAtomi.auth_comp_id,
-                    Dict(Atoma => Vector{Ref{Atoma}}()),
+                    Dict(TAtom => Vector{Ref{TAtom}}()),
                     Dict(
-                        PDBsChain => Ref(
+                        TPDBsChain => Ref(
                             chainsdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id)],
                         ),
-                        StructModel => Ref(modelsdict[ckAtomi.pdbx_PDB_model_num]),
+                        TStructModel => Ref(modelsdict[ckAtomi.pdbx_PDB_model_num]),
                     ),
                 )
                 push!(
-                    modelsdict[ckAtomi.pdbx_PDB_model_num].childs[AtomsGroup],
+                    modelsdict[ckAtomi.pdbx_PDB_model_num].childs[TAtomsGroup],
                     Ref(
                         composdict[(
                             ckAtomi.pdbx_PDB_model_num,
@@ -304,7 +304,7 @@ function constructMolecula(atomiccontent::Vector{Atoma})
                     ),
                 )
                 push!(
-                    chainsdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id)].childs[AtomsGroup],
+                    chainsdict[(ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id)].childs[TAtomsGroup],
                     Ref(
                         composdict[(
                             ckAtomi.pdbx_PDB_model_num,
@@ -320,9 +320,9 @@ function constructMolecula(atomiccontent::Vector{Atoma})
         ckchain = (ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id)
         ckcompd = (ckAtomi.pdbx_PDB_model_num, ckAtomi.label_asym_id, ckAtomi.label_seq_id)
 
-        push!(composdict[ckcompd].childs[Atoma], Ref(ckAtomi))
-        push!(chainsdict[ckchain].childs[Atoma], Ref(ckAtomi))
-        push!(modelsdict[ckmodel].childs[Atoma], Ref(ckAtomi))
+        push!(composdict[ckcompd].childs[TAtom], Ref(ckAtomi))
+        push!(chainsdict[ckchain].childs[TAtom], Ref(ckAtomi))
+        push!(modelsdict[ckmodel].childs[TAtom], Ref(ckAtomi))
 
         with_logger(warn_logger) do
             if length(ckAtomi.parents) != 0
@@ -333,9 +333,9 @@ function constructMolecula(atomiccontent::Vector{Atoma})
             end
         end
 
-        ckAtomi.parents[StructModel] = Ref(modelsdict[ckmodel])
-        ckAtomi.parents[PDBsChain] = Ref(chainsdict[ckchain])
-        ckAtomi.parents[AtomsGroup] = Ref(composdict[ckcompd])
+        ckAtomi.parents[TStructModel] = Ref(modelsdict[ckmodel])
+        ckAtomi.parents[TPDBsChain] = Ref(chainsdict[ckchain])
+        ckAtomi.parents[TAtomsGroup] = Ref(composdict[ckcompd])
     end
     return (composdict, chainsdict, modelsdict)
 end

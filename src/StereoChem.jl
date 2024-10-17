@@ -3,9 +3,8 @@ module StereoChem
 
 export loadCompounds, CmpAtomic, CompositionConfirmation
 
-using ..ProtLook: settings
-using ..Datas: TAtom, TStructModel, TAtomsGroup, TPDBsChain
-using ..Datas: TAtomC, TBondC
+import .ProtLook: settings
+using ..Data: TAtom, TStructModel, TAtomsGroup, TPDBsChain, TAtomC, TBondC
 
 import Distances:pairwice as dpairwice
 import Distances:euclidean
@@ -15,9 +14,11 @@ using Logging
 using JLD2
 using StaticArrays: SVector
 
-SetCompositions = Dict{Symbol, @NamedTuple{atomc::Dict{Symbol, TAtomc},
-                                           catec::Dict{Symbol, Dict{Symbol, Vector{String}}}
-                                           dists::(Matrix{Float32}, Array{Float32, 3})}()
+SetCompositions = Dict{
+                        Symbol, @NamedTuple{atomc::Dict{Symbol, TAtomc},
+                                           catec::Dict{Symbol, Dict{Symbol, Vector{String}}},
+                                           dists::(Matrix{Float32}, Array{Float32, 3})}
+                    }()
 
 """
     loadCompounds(CompoundNames)
@@ -106,7 +107,7 @@ function loadCompounds(compoundnames::Set{Symbol})
             if length(coordc) != length(atomic) "Different num coords and atoms records in $(compoundname)" end
         end
         atomsdists = dpairwise(euclidean, coordc)
-        bondangles = stack([dpairwise(cosine_dist, coordc.-[coordc[i]]) for i in 1:length(coordc)])
+        bondangles = stack([dpairwise(cosine_dist, coordc.-[coordc[i]]) for i in eachindex(coordc...)])
         # filling the target compounds set
         SetCompositions[compoundname] = (atomc = atomic, catec = categories, dists = (atomsdists, bondangles))
     end
@@ -130,7 +131,7 @@ function StablePosAtoms!(Atom::Symbol, BondAtoms::Set{Symbol})
     end
 end
 
-function CmpAtomic(Compound::AtomsGroup, Hatomflag::Bool, StericFlag::Bool)
+function CmpAtomic(Compound::TAtomsGroup, Hatomflag::Bool, StericFlag::Bool)
     removableatoms = Set([:HA, :OXT, :H])
     absentatoms = Set{Symbol}()
     global SetCompositions
@@ -149,7 +150,7 @@ function CmpAtomic(Compound::AtomsGroup, Hatomflag::Bool, StericFlag::Bool)
             atomBs = [atomB for atomB in keys(ModlCompound[atomA].bonds) if atomB in keys(TestCompound)]
             dist_diference[atomA] = [ModlDistance[ModlCompound[atomA].pdbx_ordinal, ModlCompound[atomB].pdbx_ordinal][1] 
                                                 for atomB in atomBs]
-                            -dpairwise(euclidean, [TestCompound[atomA][2],], [TestCompound[atomB][2] for atomB in atomBs)
+                            -dpairwise(euclidean, [TestCompound[atomA][2],], [TestCompound[atomB][2] for atomB in atomB])
             angl_diference[atomA]
         else
             push!(absentatoms, atomA)

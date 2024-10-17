@@ -1,4 +1,4 @@
-module Datas
+module Data
 
 using DataFrames, CSV
 #using Glob
@@ -9,8 +9,8 @@ export settings
 
 include("molmod/atom.jl")
 
-include("StereoChem.jl")
-import .StereoChem: loadCompounds, CmpAtomic
+#include("StereoChem.jl")
+#import .StereoChem: loadCompounds, CmpAtomic
 
 include("PDBxCIF.jl")
 import .PDBxCIF: readCIF, constructMolecula
@@ -28,10 +28,10 @@ println(settings[:DatLst])
 ProtsData = Dict{
     Symbol,
     @NamedTuple{
-        atomic::Vector{Atoma},
-        compic::Dict{Tuple{Int32,Symbol,Int32},AtomsGroup},
-        chanic::Dict{Tuple{Int32,Symbol},PDBsChain},
-        struic::Dict{Int32,StructModel},
+        atomic::Vector{TAtom},
+        compic::Dict{Tuple{Int32,Symbol,Int32},TAtomsGroup},
+        chanic::Dict{Tuple{Int32,Symbol},TPDBsChain},
+        struic::Dict{Int32,TStructModel},
     }
 }()
 for pdbr in eachrow(framePDB)
@@ -74,4 +74,4 @@ loadCompounds(
 #end
 
 
-end    #    module Datas
+end    #    module Data

@@ -4,13 +4,20 @@ runing all athers.
 """
 module ProtLook
 
-using Pkg
+import Pkg
+#Pkg.resolve()
+#Pkg.instantiate()
+projectDir, srcDir = splitdir(dirname(Base.source_path()))
+print(projectDir, srcDir)
+#Pkg.activate(projectDir)
+#Pkg.instantiate()
+
 using JSON3
 using JLD2
 
 export settings
 #activate project envivrominent and construction
-projectDir, srcDir = splitdir(dirname(Base.source_path()))
+
 dataDir = "wdata"
 structDir = "wdata/structs"
 logDir = "wdata/logs"
@@ -20,8 +27,6 @@ end
 if !ispath(joinpath(projectDir, logDir))
     mkpath(joinpath(projectDir, logDir))
 end
-Pkg.activate(projectDir)
-Pkg.instantiate()
 
 #settings get/init
 if !isfile(joinpath(projectDir, "settings.json"))
@@ -91,6 +96,5 @@ end
 
 #data init
 include("Data.jl")
-
 
 end    #    module ProtLook

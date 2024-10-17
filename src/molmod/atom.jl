@@ -35,7 +35,7 @@ struct TAtom
 	pdbx_tls_group_id::Union{Int16, Nothing}
 	pdbx_auth_alt_id::Union{Symbol, Nothing}
 	parents::Dict{Type, Ref{}}                      # links to struct hierarhy elements
-	function Atoma(ar::NamedTuple)
+	function TAtom(ar::NamedTuple)
 		latom_id = ar.label_atom_id in ("?", ".") ? Symbol(ar.auth_atom_id) : Symbol(ar.label_atom_id)
 		aatom_id = ar.auth_atom_id in ("?", ".") ? Symbol(ar.label_atom_id) : Symbol(ar.auth_atom_id)
 		lcomp_id = ar.label_comp_id in ("?", ".") ? Symbol(ar.auth_comp_id) : Symbol(ar.label_comp_id)
@@ -114,7 +114,7 @@ struct TBondC
 	pdbx_aromatic_flag::Bool
 	pdbx_stereo_config::Bool
 	pdbx_ordinal::Int16
-	function Bondc(ar::Vector{SubString{String}})
+	function TBondC(ar::Vector{SubString{String}})
 		new(Symbol(ar[1]),
 			Symbol(ar[2]),
 			Symbol(ar[3]),
@@ -138,15 +138,15 @@ struct TAtomC
 	model_Cartn_x::Union{Float32, Nothing}
 	model_Cartn_y::Union{Float32, Nothing}
 	model_Cartn_z::Union{Float32, Nothing}
-	model_Cartn::SVector{3, Union{Float32, Nothing}}
+	#model_Cartn::SVector{3, Union{Float32, Nothing}}
 	pdbx_model_Cartn_x_ideal::Union{Float32, Nothing}
 	pdbx_model_Cartn_y_ideal::Union{Float32, Nothing}
 	pdbx_model_Cartn_z_ideal::Union{Float32, Nothing}
 	pdbx_component_atom_id::Symbol
 	pdbx_component_comp_id::Symbol
 	pdbx_ordinal::Int16
-	bonds::Dict{Symbol, Tuple{Bondc, Float32, Dict{Symbol, Float32}}}
-	function Atomc(ar::Vector{SubString{String}})
+	bonds::Dict{Symbol, Tuple{TBondC, Float32, Dict{Symbol, Float32}}}
+	function TAtomC(ar::Vector{SubString{String}})
 		new(Symbol(ar[1]),
 			Symbol(ar[2]),
 			Symbol(ar[3]),
@@ -159,15 +159,15 @@ struct TAtomC
 			tryparse(Float32, ar[10]),
 			tryparse(Float32, ar[11]),
 			tryparse(Float32, ar[12]),
-			SVector{3, Union{Float32, Nothing}}(tryparse(Float32, ar[10]),
-				tryparse(Float32, ar[11]),
-				tryparse(Float32, ar[12])),
+			#SVector{3, Union{Float32, Nothing}}(tryparse(Float32, ar[10]),
+			#	tryparse(Float32, ar[11]),
+			#	tryparse(Float32, ar[12])),
 			tryparse(Float32, ar[13]),
 			tryparse(Float32, ar[14]),
 			tryparse(Float32, ar[15]),
 			Symbol(ar[16]),
 			Symbol(ar[17]),
 			parse(Int16, ar[18]),
-			Dict{Symbol, Bondc}())
+			Dict{Symbol, TBondC}())
 	end
 end

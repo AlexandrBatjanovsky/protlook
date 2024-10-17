@@ -1,12 +1,12 @@
 {
-    "CmpLib": "/home/alexandersn/Work/Proteins/protlook/wdata/components.cif",
+    "CmpLib": "/mnt/sda3/alexandersn/Work/Proteins/protlook/wdata/components.cif",
     "DirOrg": {
-        "dsDir": "/home/alexandersn/Work/Proteins/protlook/wdata/structs",
-        "prDir": "/home/alexandersn/Work/Proteins/protlook",
-        "scDir": "/home/alexandersn/Work/Proteins/protlook/src",
-        "wdDir": "/home/alexandersn/Work/Proteins/protlook/wdata",
-        "lgDir": "/home/alexandersn/Work/Proteins/protlook/wdata/logs"
+        "dsDir": "/mnt/sda3/alexandersn/Work/Proteins/protlook/wdata/structs",
+        "prDir": "/mnt/sda3/alexandersn/Work/Proteins/protlook",
+        "scDir": "/mnt/sda3/alexandersn/Work/Proteins/protlook/src",
+        "wdDir": "/mnt/sda3/alexandersn/Work/Proteins/protlook/wdata",
+        "lgDir": "/mnt/sda3/alexandersn/Work/Proteins/protlook/wdata/logs"
     },
-    "CmpInd": "/home/alexandersn/Work/Proteins/protlook/wdata/components.cif.jld2",
-    "DatLst": "/home/alexandersn/Work/Proteins/protlook/wdata/outfile.csv"
+    "CmpInd": "/mnt/sda3/alexandersn/Work/Proteins/protlook/wdata/components.cif.jld2",
+    "DatLst": "/mnt/sda3/alexandersn/Work/Proteins/protlook/wdata/outfile.csv"
 }
